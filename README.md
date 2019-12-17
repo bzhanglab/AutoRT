@@ -15,6 +15,9 @@ AutoRT is a python3 package and its dependencies can be installed via
 $ pip install -r requirements.txt
 ```
 
+AutoRT has been tested on both Linux and Windows systems.
+
+
 ## Usage
 
 #### Training and prediction
@@ -145,6 +148,8 @@ SSPVEYEFFWGPR             81.73833333333333	82.20954
 AIPSYSHLR                 29.95825	        31.344095
 ```
 
+The training took less than 12 hours using one Titan Xp GPU on a Linux server.
+
 ##### An example to show how to perform transfer learning:
 
 ```
@@ -157,3 +162,4 @@ python autort.py train -i data/28CPTAC_COprospective_W_VU_20150810_05CO037_f01_n
 python autort.py predict -t data/28CPTAC_COprospective_W_VU_20150810_05CO037_f01_normal_test.tsv -s tf_model/model.json -o tf_prediction/ -p test
 ```
 
+The training took less than 20 minutes using one Titan Xp GPU on a Linux server.
