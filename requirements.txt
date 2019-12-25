@@ -5,3 +5,4 @@ keras-rectified-adam==0.17.0
 matplotlib
 pandas
 scikit-learn
+numpy==1.16.4
