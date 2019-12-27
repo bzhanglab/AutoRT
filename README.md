@@ -17,7 +17,7 @@ $ pip install -r requirements.txt
 
 AutoRT has been tested on both Linux and Windows systems.
 
-AutoRT is also available as a **docker**. AutoRT docker requires both `Docker (>=19.03)` and `nvidia-docker (>=2.2.2)`.
+AutoRT is also available as a **docker**. AutoRT docker requires both [Docker](https://www.docker.com/) (>=19.03) and [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) (>=2.2.2).
 
 ```shell
 docker pull proteomics/autort
