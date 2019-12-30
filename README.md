@@ -80,7 +80,7 @@ optional arguments:
   -a, --radam
 ```
 
-An example training data is available in the `example/data` folder as shown below. The training data should have at least 2 columns `x` and `y` in a tab-delimited text format. The `x` column contains peptide sequences and `y` column contains retention time. The unit of retention time can be **minute** or **second**. If the unit of retention time is **minute**, users should set "-u m" and if the unit of retention time is **second**, users should set "-u s". 
+An example training data is available in the `example/data` folder as shown below. The training data should have at least 2 columns `x` and `y` in a **`tab-delimited text format`**. The `x` column contains peptide sequences and `y` column contains retention time. The unit of retention time can be **minute** or **second**. If the unit of retention time is **minute**, users should set "-u m" and if the unit of retention time is **second**, users should set "-u s". 
 
 ```shell
 $ head example/data/PXD006109_Cerebellum_rt_add_mox_all_rt_range_3_train.tsv
