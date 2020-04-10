@@ -170,3 +170,9 @@ python ../autort.py predict -t data/28CPTAC_COprospective_W_VU_20150810_05CO037_
 ```
 
 The training took less than 20 minutes using one Titan Xp GPU on a Linux server.
+
+## How to cite:
+
+Wen, B., Li, K., Zhang, Y. et al. Cancer neoantigen prioritization through sensitive and reliable proteogenomics analysis. Nature Communications 11, 1759 (2020). https://doi.org/10.1038/s41467-020-15456-w
+
+
