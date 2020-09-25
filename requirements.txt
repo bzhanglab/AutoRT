@@ -1,5 +1,5 @@
 keras==2.2.4
-tensorflow-gpu==1.13.1
+tensorflow-gpu==1.15.4
 keras-lookahead==0.9.0
 keras-rectified-adam==0.17.0
 matplotlib
