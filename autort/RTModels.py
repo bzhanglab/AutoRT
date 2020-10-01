@@ -15,7 +15,7 @@ import keras.backend as K
 import tensorflow as tf
 
 from .RegCallback import RegCallback
-from .DataIO import data_processing, processing_prediction_data
+from .DataIO import data_processing, processing_prediction_data, get_max_length_from_input_data
 from .Utils import scaling_y, scaling_y_rev, combine_rts
 from .Metrics import evaluate_model
 
@@ -26,6 +26,7 @@ import pickle
 import json
 import numpy as np
 from shutil import copyfile
+import sys
 
 #from .AdamW import AdamW
 
@@ -367,6 +368,13 @@ def ensemble_models(input_data: str, test_file=None,
         new_model_list = dict()
         new_model_list['dp_model'] = dict()
         model_i = 1
+
+        ## peptide length check
+        peptide_max_length = get_max_length_from_input_data(input_data)
+        if peptide_max_length != model_list['max_x_length']:
+            print("The max length (%d) in the training data should be less than the length supported by the model %d" % (model_list['max_x_length'], model_list['max_x_length']))
+            sys.exit()
+
         for (name, dp_model_file) in model_list['dp_model'].items():
             print("\nDeep learning model:", name)
 

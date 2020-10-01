@@ -199,6 +199,15 @@ def data_processing(input_data: str, test_file=None, mod=None, max_x_length = 50
     return [X_train, Y_train, X_test, Y_test, scale_para]
 
 
+def get_max_length_from_input_data(input_data:str):
+    siteData = pd.read_table(input_data, sep="\t", header=0, low_memory=False)
+    longest_pep = 0
+    for pep in siteData["x"]:
+        if longest_pep < len(pep):
+            longest_pep = len(pep)
+
+    return longest_pep
+
 def processing_prediction_data(model_file: str, input_data: str):
     '''
     Used by AutoRT
