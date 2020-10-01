@@ -159,6 +159,8 @@ The training took less than 12 hours using one Titan Xp GPU on a Linux server.
 
 ##### An example to show how to perform transfer learning:
 
+Please note that the length of the longest peptide in the training data must be **<= 48** which is the maximum length supported by the based models in the github folder **models/base_models_PXD006109/**. 
+
 ```
 $ cd example
 $ cat transfer_learning.sh
@@ -170,6 +172,12 @@ python ../autort.py predict -t data/28CPTAC_COprospective_W_VU_20150810_05CO037_
 ```
 
 The training took less than 20 minutes using one Titan Xp GPU on a Linux server.
+
+A way to support prediction for peptides with length > 48 is to retain the base models by increasing the number given to parameter "-l". For example, set "-l 60" to support peptides with length <= 60.
+
+```
+python ../autort.py train -e 100 -b 64 -g ../models/base_models/model.json -u m -p 1 -i data/PXD006109_Cerebellum_rt_add_mox_all_rt_range_3_train.tsv -sm min_max -l 60 -rlr -n 20 -o PXD006109_models/
+```
 
 ## How to cite:
 
