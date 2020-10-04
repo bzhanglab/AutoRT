@@ -371,8 +371,8 @@ def ensemble_models(input_data: str, test_file=None,
 
         ## peptide length check
         peptide_max_length = get_max_length_from_input_data(input_data)
-        if peptide_max_length != model_list['max_x_length']:
-            print("The max length (%d) in the training data should be less than the length supported by the model %d" % (peptide_max_length, model_list['max_x_length']))
+        if peptide_max_length > model_list['max_x_length']:
+            print("The max length (%d) in the training data should be <= the length supported by the model %d" % (peptide_max_length, model_list['max_x_length']))
             sys.exit()
 
         for (name, dp_model_file) in model_list['dp_model'].items():
