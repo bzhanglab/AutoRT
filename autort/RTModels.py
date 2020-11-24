@@ -476,6 +476,9 @@ def ensemble_models(input_data: str, test_file=None,
             my_callbacks = RegCallback(X_train, X_test, Y_train, Y_test, scale_para)
             # Save model
             model_chk_path = out_dir + "/best_model.hdf5"
+            if os.path.exists(model_chk_path):
+                os.remove(model_chk_path)
+
             mcp = ModelCheckpoint(model_chk_path, save_best_only=True,
                                   save_weights_only=False,
                                   verbose=1, mode='min')
@@ -505,7 +508,7 @@ def ensemble_models(input_data: str, test_file=None,
             #    best_model = load_model(model_chk_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
             #else:
             #    best_model = load_model(model_chk_path)
-            best_model = load_model(model_chk_path)
+            best_model = tf.keras.models.load_model(model_chk_path)
             ## save the model to a file:
             model_file_name = "model_" + str(name) + ".h5"
             model_file_path = out_dir + "/" + model_file_name
@@ -725,7 +728,14 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
     y_dp = np.zeros(0)
 
     model_folder = os.path.dirname(model_file)
-    avg_models = list()
+
+    if x.shape[0] < batch_size:
+        # remove a warning message
+        batch_size = 64
+    #if x.shape[0] < 64:
+    #    batch_size = 2
+    #print(batch_size)
+    #avg_models = list()
     for (name, dp_model_file) in model_list['dp_model'].items():
         print("\nDeep learning model:", name)
         # keras model evaluation: loss and accuracy
@@ -737,10 +747,13 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
         #    model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
         #else:
         #    model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
-        model = load_model(model_full_path)
+        model = tf.keras.models.load_model(model_full_path)
 
-        avg_models.append(model)
-        y_prob = model.predict(x, batch_size=batch_size)
+        #avg_models.append(model)
+
+        #print("batch size: "+str(batch_size))
+
+        y_prob = model.predict(x,batch_size=batch_size)
         ## for class 1
         #y_prob_dp_vector = y_prob[:, 1]
         y_prob_dp_vector = y_prob
@@ -763,7 +776,7 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
             out_prefix = prefix + "_" + str(name)
             evaluate_model(y_true_class, y_prob_dp_vector, para=model_list, out_dir=out_dir, prefix=out_prefix)
 
-
+        del model
         gc.collect()
         K.clear_session()
         #tf.reset_default_graph()
