@@ -1,17 +1,17 @@
-import keras
-from keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger, ReduceLROnPlateau, LearningRateScheduler
-from keras.layers import Dense, Dropout, Activation, Flatten, Input, MaxPooling2D, Conv2D, Conv1D, Bidirectional, LSTM, \
-    Embedding, MaxPooling1D, Average, CuDNNGRU, CuDNNLSTM, Bidirectional, GRU
-from keras.layers.normalization import BatchNormalization
-from keras.models import Model, load_model, clone_model, model_from_json
-from keras.models import Sequential
-from keras.optimizers import Adam, SGD
+from tensorflow import keras
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger, ReduceLROnPlateau, LearningRateScheduler
+from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten, Input, MaxPooling2D, Conv2D, Conv1D, Bidirectional, LSTM, \
+    Embedding, MaxPooling1D, Average, GRU, LSTM, Bidirectional, GRU
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.models import Model, load_model, clone_model, model_from_json
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam, SGD
 import pandas as pd
 import os
-from keras_radam import RAdam
-from keras_lookahead import Lookahead
+#from keras_radam import RAdam
+#from keras_lookahead import Lookahead
 import gc
-import keras.backend as K
+import tensorflow.keras.backend as K
 import tensorflow as tf
 
 from .RegCallback import RegCallback
@@ -108,6 +108,12 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
                                                                    scale_para=scale_para, unit = unit,out_dir=out_dir,
                                                                    add_reverse=add_reverse)
 
+    print("Save training and testing data to file:\n")
+    np.save("X_train", X_train)
+    np.save("Y_train", Y_train)
+    np.save("X_test", X_test)
+    np.save("Y_test", Y_test)
+
     if model is None:
         print("Use default model ...")
         model = build_default_model(X_train.shape[1:])
@@ -119,10 +125,11 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
         transfer_layer = 5
         frozen = True
         # model_copy.set_weights(model.get_weights())
-        if use_radam == True:
-            base_model = load_model(p_model, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
-        else:
-            base_model = load_model(p_model)
+        #if use_radam == True:
+        #    base_model = load_model(p_model, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+        #else:
+            #base_model = load_model(p_model)
+        base_model = load_model(p_model)
         print("Perform transfer learning ...")
         n_layers = len(base_model.layers)
         print("The number of layers: %d" % (n_layers))
@@ -139,72 +146,80 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
         ## use default optimizer: Adam
         if optimizer_name is None:
 
-            if use_radam == True:
-                print("Use optimizer: %s" % ("rectified-adam"))
-                model.compile(loss='mean_squared_error',
-                              # math.ceil(X_train.shape[0]/batch_size*nb_epoch)
-                              optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
-                              #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),sync_period=5, slow_step=0.5),
-                              #metrics=['mean_squared_error'])
-            else:
-                print("Use default optimizer:Adam")
-                model.compile(loss='mean_squared_error',
-                          optimizer="adam")
-                          #metrics=['mean_squared_error'])
+            #if use_radam == True:
+            #    print("Use optimizer: %s" % ("rectified-adam"))
+            #    model.compile(loss='mean_squared_error',
+            #                  # math.ceil(X_train.shape[0]/batch_size*nb_epoch)
+            #                  optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
+            #                  #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),sync_period=5, slow_step=0.5),
+            #                  #metrics=['mean_squared_error'])
+            #else:
+            #    print("Use default optimizer:Adam")
+            #    model.compile(loss='mean_squared_error',
+            #              optimizer="adam")
+            #              #metrics=['mean_squared_error'])
+            print("Use default optimizer:Adam")
+            model.compile(loss='mean_squared_error',optimizer="adam")
+
         else:
 
-            if use_radam == True:
-                print("Use optimizer: %s" % ("rectified-adam"))
-                model.compile(loss='mean_squared_error',
-                              optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
-                              #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
-                              #                    sync_period=5, slow_step=0.5),
-                              #metrics=['mean_squared_error'])
-            else:
-                print("Use optimizer provided by user: %s" % (optimizer_name))
-                model.compile(loss='mean_squared_error',
-                          optimizer=optimizer_name)
+            #if use_radam == True:
+            #    print("Use optimizer: %s" % ("rectified-adam"))
+            #    model.compile(loss='mean_squared_error',
+            #                  optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
+            #                  #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
+            #                  #                    sync_period=5, slow_step=0.5),
+            #                  #metrics=['mean_squared_error'])
+            #else:
+            #    print("Use optimizer provided by user: %s" % (optimizer_name))
+            #    model.compile(loss='mean_squared_error',
+            #              optimizer=optimizer_name)
                           # Implementation from https://github.com/GLambard/AdamW_Keras
                           #optimizer=Adam(amsgrad=True))
                           #optimizer=SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True))
                           #optimizer=Lookahead(AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-8, decay=0., weight_decay=1e-4, batch_size=batch_size, samples_per_epoch=X_train.shape[0], epochs=nb_epoch),sync_period=5, slow_step=0.5))
                           #metrics=['mean_squared_error'])
+            print("Use optimizer provided by user: %s" % (optimizer_name))
+            model.compile(loss='mean_squared_error',optimizer=optimizer_name)
 
     else:
         if optimizer_name is None:
 
 
 
-            if use_radam == True:
-                print("Use optimizer: %s" % ("rectified-adam"))
-                model.compile(loss='mean_squared_error',
-                              optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
-                              #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
-                              #                    sync_period=5, slow_step=0.5),
-                              #metrics=['mean_squared_error'])
-            else:
-                print("Use optimizer from the model.")
-                model.compile(loss='mean_squared_error',
-                               ## In this case, we cannot change the learning rate.
-                               optimizer=model.optimizer)
-                               #metrics=['mean_squared_error'])
-
+            #if use_radam == True:
+            #    print("Use optimizer: %s" % ("rectified-adam"))
+            #    model.compile(loss='mean_squared_error',
+            #                  optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
+            #                  #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
+            #                  #                    sync_period=5, slow_step=0.5),
+            #                  #metrics=['mean_squared_error'])
+            #else:
+            #    print("Use optimizer from the model.")
+            #    model.compile(loss='mean_squared_error',
+            #                   ## In this case, we cannot change the learning rate.
+            #                   optimizer=model.optimizer)
+            #                   #metrics=['mean_squared_error'])
+            print("Use optimizer from the model.")
+            model.compile(loss='mean_squared_error',optimizer=model.optimizer)
 
         else:
 
-            if use_radam == True:
-                print("Use optimizer: %s" % ("rectified-adam"))
-                model.compile(loss='mean_squared_error',
-                              optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
-                              #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
-                              #                    sync_period=5, slow_step=0.5),
-                              #metrics=['mean_squared_error'])
-            else:
-                print("Use optimizer provided by user: %s" % (optimizer_name))
-                model.compile(loss='mean_squared_error',
-                               ## In this case, we cannot change the learning rate.
-                               optimizer=optimizer_name)
-                               #metrics=['mean_squared_error'])
+            #if use_radam == True:
+            #    print("Use optimizer: %s" % ("rectified-adam"))
+            #    model.compile(loss='mean_squared_error',
+            #                  optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
+            #                  #optimizer=Lookahead(RAdam(total_steps=math.ceil(X_train.shape[0]/batch_size), warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
+            #                  #                    sync_period=5, slow_step=0.5),
+            #                  #metrics=['mean_squared_error'])
+            #else:
+            #    print("Use optimizer provided by user: %s" % (optimizer_name))
+            #    model.compile(loss='mean_squared_error',
+            #                   ## In this case, we cannot change the learning rate.
+            #                   optimizer=optimizer_name)
+            #                   #metrics=['mean_squared_error'])
+            print("Use optimizer provided by user: %s" % (optimizer_name))
+            model.compile(loss='mean_squared_error',optimizer=optimizer_name)
 
 
     print("optimizer: %s" % (type(model.optimizer)))
@@ -234,6 +249,7 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
     # tbCallBack = callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
     #model.fit(X_train, Y_train, batch_size=batch_size, epochs=nb_epoch, validation_data=(X_test, Y_test), callbacks=[my_callbacks, mcp])
     if use_external_test_data is True:
+        #model.save("debug_model.h5")
         model.fit(X_train, Y_train, batch_size=batch_size, epochs=nb_epoch, validation_data=(X_test, Y_test),
                   # callbacks=[my_callbacks, mcp])
                   callbacks=all_callbacks)
@@ -244,10 +260,11 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
 
 
     ## get the best model
-    if use_radam == True:
-        model_best = load_model(model_chk_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
-    else:
-        model_best = load_model(model_chk_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+    #if use_radam == True:
+    #    model_best = load_model(model_chk_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+    #else:
+    #    model_best = load_model(model_chk_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+    model_best = load_model(model_chk_path)
 
     y_pred = model_best.predict(X_test)
 
@@ -326,7 +343,9 @@ def ensemble_models(input_data: str, test_file=None,
             with open(m_file, "r") as json_read:
                 models[i] = keras.models.model_from_json(json_read.read())
 
-            models[i]._layers[1].batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
+            #models[i]._layers[1].batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
+            models[i]._layers[0]._batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
+            models[i] = tf.keras.models.model_from_json(models[i].to_json())
             optimizer_name[i] = ga_model_list[i]['optimizer_name']
 
         print("Training ...")
@@ -351,7 +370,7 @@ def ensemble_models(input_data: str, test_file=None,
             del res_map
             gc.collect()
             K.clear_session()
-            tf.reset_default_graph()
+            #tf.reset_default_graph()
 
     else:
 
@@ -392,10 +411,11 @@ def ensemble_models(input_data: str, test_file=None,
             model_name = os.path.basename(dp_model_file)
             model_full_path = model_folder + "/" + model_name
 
-            if use_radam == True:
-                model = load_model(model_full_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
-            else:
-                model = load_model(model_full_path)
+            #if use_radam == True:
+            #    model = load_model(model_full_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+            #else:
+            #    model = load_model(model_full_path)
+            model = load_model(model_full_path)
             #new_model = change_model(model, X_train.shape[1:])
             new_model = model
 
@@ -427,27 +447,29 @@ def ensemble_models(input_data: str, test_file=None,
             '''
 
             print(model.optimizer)
-            if use_radam == True:
-                print("Use optimizer: %s" % ("rectified-adam"))
-                new_model.compile(loss='mean_squared_error',
-                                  ## In this case, we cannot change the learning rate.
-                                  optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
-                                  #optimizer=RAdam(),
-                                  #optimizer=Lookahead(RAdam(total_steps=1000, warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
-                                  #                    sync_period=5, slow_step=0.5))
-                                  # optimizer=Adam(lr=0.0001),
-                                  # optimizer=SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True),
-                                  #metrics=['mean_squared_error'])
-            else:
-                print("Use optimizer: %s from saved model" % (model.optimizer.__class__.__name__))
-                new_model.compile(loss='mean_squared_error',
-                              ## In this case, we cannot change the learning rate.
-                              #optimizer=model.optimizer)
-                              optimizer=model.optimizer.__class__.__name__)
-                              #optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, decay=0.01/nb_epoch))
-                              #optimizer=Adam(lr=0.001))
-                              #optimizer=SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True))
-                              #metrics=['mean_squared_error'])
+            #if use_radam == True:
+            #    print("Use optimizer: %s" % ("rectified-adam"))
+            #    new_model.compile(loss='mean_squared_error',
+            #                      ## In this case, we cannot change the learning rate.
+            #                      optimizer=Lookahead(RAdam(),sync_period=5, slow_step=0.5))
+            #                      #optimizer=RAdam(),
+            #                      #optimizer=Lookahead(RAdam(total_steps=1000, warmup_proportion=0.1, min_lr=1e-5, lr=0.001),
+            #                      #                    sync_period=5, slow_step=0.5))
+            #                      # optimizer=Adam(lr=0.0001),
+            #                      # optimizer=SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True),
+            #                      #metrics=['mean_squared_error'])
+            #else:
+            #    print("Use optimizer: %s from saved model" % (model.optimizer.__class__.__name__))
+            #    new_model.compile(loss='mean_squared_error',
+            #                  ## In this case, we cannot change the learning rate.
+            #                  #optimizer=model.optimizer)
+            #                  optimizer=model.optimizer.__class__.__name__)
+            #                  #optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, decay=0.01/nb_epoch))
+            #                  #optimizer=Adam(lr=0.001))
+            #                  #optimizer=SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True))
+            #                  #metrics=['mean_squared_error'])
+            print("Use optimizer: %s from saved model" % (model.optimizer.__class__.__name__))
+            new_model.compile(loss='mean_squared_error',optimizer=model.optimizer.__class__.__name__)
 
             print("Used optimizer:")
             print(model.optimizer)
@@ -479,10 +501,11 @@ def ensemble_models(input_data: str, test_file=None,
                       callbacks=all_callbacks)#, keras.callbacks.ReduceLROnPlateau(patience=3, factor=0.5, verbose=1, min_lr=0.000001)])
 
             ## get the best model
-            if use_radam == True:
-                best_model = load_model(model_chk_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
-            else:
-                best_model = load_model(model_chk_path)
+            #if use_radam == True:
+            #    best_model = load_model(model_chk_path, custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+            #else:
+            #    best_model = load_model(model_chk_path)
+            best_model = load_model(model_chk_path)
             ## save the model to a file:
             model_file_name = "model_" + str(name) + ".h5"
             model_file_path = out_dir + "/" + model_file_name
@@ -492,7 +515,7 @@ def ensemble_models(input_data: str, test_file=None,
 
             gc.collect()
             K.clear_session()
-            tf.reset_default_graph()
+            #tf.reset_default_graph()
 
         new_model_list['max_x_length'] = model_list['max_x_length']
         new_aa_file = out_dir + "/" + os.path.basename(model_list['aa'])
@@ -565,7 +588,8 @@ def change_model(model, new_input_shape):
     """
     print("Base model ...")
     print(model.get_weights())
-    model._layers[1].batch_input_shape = (None,new_input_shape[0],new_input_shape[1])
+    #model._layers[1].batch_input_shape = (None,new_input_shape[0],new_input_shape[1])
+    model._layers[0]._batch_input_shape = (None, new_input_shape[0], new_input_shape[1])
 
     # rebuild model architecture by exporting and importing via json
     new_model = keras.models.model_from_json(model.to_json())
@@ -591,14 +615,14 @@ def change_model(model, new_input_shape):
     return new_model
 
 def change_model_input_shape(model, new_input_shape):
-    model._layers[1].batch_input_shape = (None, new_input_shape[0], new_input_shape[1])
+    model._layers[0]._batch_input_shape = (None, new_input_shape[0], new_input_shape[1])
     return model
 
 def get_model_input_shape(model):
-    return model._layers[1].batch_input_shape
+    return model._layers[0]._batch_input_shape
 
 def get_peptide_length_from_model(model):
-    return model._layers[1].batch_input_shape[1]
+    return model._layers[0]._batch_input_shape[1]
 
 
 def ensemble_predict(model_file:str, x, y=None, para=None, out_dir="./", method="average",batch_size=64, prefix="test", use_radam=False):
@@ -709,10 +733,11 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
         model_name = os.path.basename(dp_model_file)
         model_full_path = model_folder + "/" + model_name
 
-        if use_radam == True:
-            model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
-        else:
-            model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+        #if use_radam == True:
+        #    model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+        #else:
+        #    model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
+        model = load_model(model_full_path)
 
         avg_models.append(model)
         y_prob = model.predict(x, batch_size=batch_size)
@@ -741,6 +766,6 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
 
         gc.collect()
         K.clear_session()
-        tf.reset_default_graph()
+        #tf.reset_default_graph()
 
     return y_dp

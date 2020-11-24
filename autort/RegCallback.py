@@ -1,7 +1,8 @@
 
 import scipy
+import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from keras.callbacks import Callback
+from tensorflow.keras.callbacks import Callback
 from .Metrics import calc_delta_t95
 from .Utils import scaling_y_rev
 import sklearn

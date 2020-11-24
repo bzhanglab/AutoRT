@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'AutoRT',
-    version = '1.0.0',
+    version = '2.0.0-beta',
     keywords='Retention time',
     description = 'Retention time prediction using deep learning',
     license = 'GNU General Public License v3.0',
@@ -13,7 +13,6 @@ setup(
     include_package_data = True,
     platforms = 'any',
     install_requires = [
-        'keras',
         'tensorflow'
     ],
 )

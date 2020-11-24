@@ -1,8 +1,8 @@
 
 from numpy.random import seed
 seed(2019)
-from tensorflow import set_random_seed
-set_random_seed(2020)
+#from tensorflow import set_random_seed
+#set_random_seed(2020)
 import matplotlib
 matplotlib.use("agg")
 import argparse
