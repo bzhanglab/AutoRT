@@ -6,6 +6,12 @@ import pandas as pd
 import numpy as np
 import scipy
 from scipy.stats import pearsonr
+from itertools import combinations
+import multiprocessing
+from .Utils import combine_rts
+import functools
+
+
 
 
 
@@ -38,3 +44,43 @@ def calc_delta_t95(obs, pred):
 
 def calc_elta_tr95(obs, pred):
     return calc_delta_t95(obs, pred) / (max(obs) - min(obs))
+
+def evaluate_model_combn(i, x, y, para=None, reverse=True, metric="median_absolute_error"):
+    ind = list()
+    ind.extend(i)
+    y_p = np.apply_along_axis(combine_rts, 1, x[ind], reverse=reverse, scale_para=para, method="mean",remove_outlier=True)
+    y_t = y
+    if reverse == True:
+        y_t = scaling_y_rev(y_t, para)
+        #y_p = scaling_y_rev(y_p, para)
+    y2 = pd.DataFrame({"y": y_t, "y_pred": y_p.reshape(y_p.shape[0])})
+    metric_res = None
+    if metric == "median_absolute_error":
+        metric_res = float(np.median(np.abs(y2['y'] - y2['y_pred'])))
+    return [i,metric_res]
+
+def model_selection(x, y, para=None, metric="median_absolute_error"):
+    ## x is a numpy array. shape: sample vs model
+    n_models = x.shape[1]
+    print("# of models: %d " % (n_models))
+    models_list = list()
+    for i in range(n_models):
+        models_list.extend(list(combinations(range(n_models),i+1)))
+
+    p = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    evaluate_model_combn_x = functools.partial(evaluate_model_combn, x=x,y=y,para=para,reverse=True,metric=metric)
+    data = p.map(evaluate_model_combn_x, models_list)
+    p.close()
+    ## select best combination
+    best_i = None
+    if metric == "median_absolute_error":
+        mae = np.Inf
+        for i in data:
+            if mae > i[1]:
+                best_i = i
+                mae = i[1]
+
+    print("Best model combination based on metric: %s" % (metric))
+    print(best_i)
+    return [best_i,data]
+

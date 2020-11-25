@@ -27,11 +27,10 @@ AutoRT supports training models from scratch as well as transfer learning. We re
 ##### Training:
 ```
 $ python autort.py train -h
-usage: autort.py [-h] -i INPUT [-t TEST] [-o OUT_DIR] [-e EPOCHS]
-                 [-b BATCH_SIZE] [-r2 MAX_RT] [-l MAX_LENGTH] [-p MOD]
-                 [-u UNIT] [-sm SCALE_METHOD] [-sf SCALE_FACTOR]
-                 [-m MODEL_FILE] [-g GA] [-a] [-r] [-n EARLY_STOP_PATIENCE]
-                 [-rlr]
+usage: autort.py [-h] -i INPUT [-o OUT_DIR] [-e EPOCHS] [-b BATCH_SIZE]
+                 [-r2 MAX_RT] [-l MAX_LENGTH] [-p MOD] [-u UNIT]
+                 [-sm SCALE_METHOD] [-sf SCALE_FACTOR] [-m MODEL_FILE] [-g GA]
+                 [-r] [-n EARLY_STOP_PATIENCE] [-rlr]
 
 AutoRT
 
@@ -39,7 +38,6 @@ optional arguments:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
                         Input data for training
-  -t TEST, --test TEST  Input data for testing
   -o OUT_DIR, --out_dir OUT_DIR
                         Output directory
   -e EPOCHS, --epochs EPOCHS
@@ -52,7 +50,6 @@ optional arguments:
   -sf SCALE_FACTOR, --scale_factor SCALE_FACTOR
   -m MODEL_FILE, --model_file MODEL_FILE
   -g GA, --ga GA
-  -a, --radam
   -r, --add_reverse
   -n EARLY_STOP_PATIENCE, --early_stop_patience EARLY_STOP_PATIENCE
   -rlr, --add_ReduceLROnPlateau

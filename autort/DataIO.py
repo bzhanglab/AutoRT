@@ -277,6 +277,15 @@ def processing_prediction_data(model_file: str, input_data: str):
     return train_data
 
 
+def split_data_file(file,test_size=0.1,random_state=2020,out_dir="./"):
+    df = pd.read_table(file,sep="\t",header=0)
+    train, test = train_test_split(df,test_size=test_size,random_state=random_state, shuffle=True)
+    train_file = out_dir + "/train.tsv"
+    test_file = out_dir + "/validation.tsv"
+    train.to_csv(train_file, index=False, sep="\t")
+    test.to_csv(test_file, index=False, sep="\t")
+    return [train_file,test_file]
+
 
 
 

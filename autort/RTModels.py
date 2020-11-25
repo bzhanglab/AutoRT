@@ -15,9 +15,9 @@ import tensorflow.keras.backend as K
 import tensorflow as tf
 
 from .RegCallback import RegCallback
-from .DataIO import data_processing, processing_prediction_data, get_max_length_from_input_data
+from .DataIO import data_processing, processing_prediction_data, get_max_length_from_input_data, split_data_file
 from .Utils import scaling_y, scaling_y_rev, combine_rts
-from .Metrics import evaluate_model
+from .Metrics import evaluate_model,model_selection
 
 #from .PolynomialDecay import PolynomialDecay
 
@@ -283,7 +283,7 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
 
 
 
-def ensemble_models(input_data: str, test_file=None,
+def ensemble_models(input_data: str, #test_file=None,
                     models_file=None,
                     ga_file=None,
                     ensemble_method="average",
@@ -308,9 +308,12 @@ def ensemble_models(input_data: str, test_file=None,
 
     model_list = dict()
 
+    ## prepare training and validation data
+    train_file, test_file = split_data_file(input_data,out_dir=out_dir)
+
 
     if ga_file is not None:
-        X_train, Y_train, X_test, Y_test, scale_para = data_processing(input_data=input_data, test_file=test_file,
+        X_train, Y_train, X_test, Y_test, scale_para = data_processing(input_data=input_data, #test_file=test_file,
                                                                            mod=mod, max_x_length=max_x_length,
                                                                            scale_para=scale_para, unit=unit,
                                                                            out_dir=out_dir,add_reverse=add_reverse)
@@ -334,6 +337,7 @@ def ensemble_models(input_data: str, test_file=None,
         with open(ga_file, "r") as read_file:
             ga_model_list = json.load(read_file)
 
+
         model_folder = os.path.dirname(ga_file)
         models = dict()
         for i in ga_model_list.keys():
@@ -353,7 +357,7 @@ def ensemble_models(input_data: str, test_file=None,
         for (name, model) in models.items():
             print("Train model:", name)
             # perform sample specific training
-            res_map = train_model(input_data=input_data, test_file=test_file, batch_size=batch_size,
+            res_map = train_model(input_data=train_file, test_file=test_file, batch_size=batch_size,
                                   nb_epoch=nb_epoch, early_stop_patience=early_stop_patience, mod=mod,
                                   max_x_length=max_x_length, scale_para=scale_para, unit=unit,
                                   out_dir=out_dir, prefix=str(name), model=model,
@@ -397,7 +401,8 @@ def ensemble_models(input_data: str, test_file=None,
         for (name, dp_model_file) in model_list['dp_model'].items():
             print("\nDeep learning model:", name)
 
-            X_train, Y_train, X_test, Y_test, scale_para = data_processing(input_data=input_data, test_file=test_file,
+
+            X_train, Y_train, X_test, Y_test, scale_para = data_processing(input_data=train_file, test_file=test_file,
                                                                            mod=mod,
                                                                            max_x_length=model_list['max_x_length'],
                                                                            scale_para=scale_para, unit=unit,
@@ -573,12 +578,17 @@ def ensemble_models(input_data: str, test_file=None,
     with open(model_json, 'w') as f:
         json.dump(model_list, f)
 
-    ## evaluation
-    if test_file is not None:
-        ensemble_predict(model_json,x=X_test,y=Y_test,para=para, batch_size=batch_size,method=ensemble_method,
-                         out_dir=out_dir,
-                         prefix="final_eval")
+    ## best model combination selection
+    pred_all, y_true = rt_predict(model_file=model_json, test_file=test_file, out_dir=out_dir, prefix=prefix)
+    pred_all = pd.DataFrame(pred_all)
+    best_i, model_data = model_selection(pred_all,y_true,para=para)
+    model_list["best_models"] = ",".join([str(i) for i in best_i[0]])
+    model_list["best_performance"] = best_i[1]
 
+    ## save result
+    model_json = out_dir + "/model.json"
+    with open(model_json, 'w') as f:
+        json.dump(model_list, f)
     ####################################################################################################################
 
 def change_model(model, new_input_shape):
@@ -672,6 +682,8 @@ def rt_predict(model_file:str, test_file:str, out_dir="./", prefix="test", metho
     ## prediction result
     y_pr_final = np.empty(0)
 
+    y_true = None
+
     if method == "average":
         print("Average ...")
 
@@ -684,20 +696,23 @@ def rt_predict(model_file:str, test_file:str, out_dir="./", prefix="test", metho
 
         if "y" in input_data.columns.values:
             y_true = scaling_y(np.asarray(input_data['y']), model_list)
-            res = dl_models_predict(model_file, x=x_predict_data, y=y_true, out_dir=out_dir, prefix=prefix, use_radam=use_radam)
+            ## prediction data for each model
+            pred_all = dl_models_predict(model_file, x=x_predict_data, y=y_true, out_dir=out_dir, prefix=prefix, use_radam=use_radam)
         else:
-            res = dl_models_predict(model_file, x=x_predict_data, out_dir=out_dir, prefix=prefix, use_radam=use_radam)
+            ## prediction data for each model
+            pred_all = dl_models_predict(model_file, x=x_predict_data, out_dir=out_dir, prefix=prefix, use_radam=use_radam)
         #y_pr_final = res.mean(axis=1)
         #y_pr_final = np.median(res,axis=1)
-
-        rt_pred = np.apply_along_axis(combine_rts, 1, res, reverse=True, scale_para=model_list, method="mean", remove_outlier=True)
+        #np.save("res",pred_all)
+        #np.save("y_true",y_true)
+        rt_pred = np.apply_along_axis(combine_rts, 1, pred_all, reverse=True, scale_para=model_list, method="mean", remove_outlier=True)
         #y_pr_final = np.apply_along_axis(combine_rts, 1, res, reverse=False, method="mean", remove_outlier=True)
         #y_pr_final = np.apply_along_axis(combine_rts, 1, res, reverse=False, method="median", remove_outlier=False)
         #y_pr_final = np.apply_along_axis(combine_rts, 1, res, reverse=False, method="median", remove_outlier=False)
 
         #np.save("res", res)
         #np.save("y_pr_final", y_pr_final)
-        res_to_file = res
+        #res_to_file = res
         #res_to_file = np.append(res_to_file, y_pr_final.reshape([y_pr_final.shape[0], 1]), axis=1)
 
 
@@ -708,7 +723,7 @@ def rt_predict(model_file:str, test_file:str, out_dir="./", prefix="test", metho
         input_data['y_pred'] = rt_pred
 
         ## output
-        out_file = out_dir + "/" + prefix + ".csv"
+        out_file = out_dir + "/" + prefix + ".tsv"
         input_data.to_csv(out_file,sep="\t",index=False)
 
         ## evaluate
@@ -717,6 +732,8 @@ def rt_predict(model_file:str, test_file:str, out_dir="./", prefix="test", metho
             #y_pr_final = minMaxScale(np.asarray(input_data['y']), model_list['min_rt'], model_list['max_rt'])
             out_prefix = prefix + "_" + "evaluate"
             evaluate_model(input_data['y'], rt_pred, para=model_list, out_dir=out_dir, prefix=out_prefix, reverse=False)
+
+        return [pred_all, y_true]
 
 
 def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefix="test", use_radam=False):
@@ -738,6 +755,11 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
     #avg_models = list()
     for (name, dp_model_file) in model_list['dp_model'].items():
         print("\nDeep learning model:", name)
+
+        if "best_models" in model_list:
+            best_models = model_list['best_models'].split(",")
+            if name not in best_models:
+                continue
         # keras model evaluation: loss and accuracy
         # load model
         model_name = os.path.basename(dp_model_file)
