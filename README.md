@@ -1,7 +1,7 @@
 # [AutoRT](https://doi.org/10.1038/s41467-020-15456-w)
 Peptide retention time prediction using deep learning
 
-[![HitCount](http://hits.dwyl.io/bzhanglab/AutoRT.svg)](http://hits.dwyl.io/bzhanglab/AutoRT)
+[![HitCount](http://hits.dwyl.com/bzhanglab/AutoRT.svg)](http://hits.dwyl.com/bzhanglab/AutoRT)
 
 ## Installation
 
