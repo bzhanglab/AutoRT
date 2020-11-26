@@ -31,12 +31,12 @@ $ git clone https://github.com/bzhanglab/AutoRT
 ```
 
 #### Installation
-AutoRT is a python3 package and its dependencies can be installed via
+AutoRT is a python3 package. [TensorFlow](https://www.tensorflow.org/) (>=2.3.1) is supported. Its dependencies can be installed via
 ```shell
 $ pip install -r requirements.txt
 ```
 
-AutoRT has been tested on both Linux and Windows systems.
+AutoRT has been tested on both Linux and Windows systems. It supports training and prediction on both CPU and GPU, but GPU is recommended for model training.
 
 
 ## Usage
