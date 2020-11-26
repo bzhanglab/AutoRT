@@ -54,10 +54,15 @@ def evaluate_model_combn(i, x, y, para=None, reverse=True, metric="median_absolu
         y_t = scaling_y_rev(y_t, para)
         #y_p = scaling_y_rev(y_p, para)
     y2 = pd.DataFrame({"y": y_t, "y_pred": y_p.reshape(y_p.shape[0])})
-    metric_res = None
-    if metric == "median_absolute_error":
-        metric_res = float(np.median(np.abs(y2['y'] - y2['y_pred'])))
-    return [i,metric_res]
+    #if metric == "median_absolute_error":
+
+    cor = pearsonr(y2['y'], y2['y_pred'])[0]
+    mean_absolute_error   = sklearn.metrics.mean_absolute_error(y2['y'], y2['y_pred'])
+    # median_absolute_error = float(np.median(np.abs(y2['y'] - y2['y_pred'])))
+    median_absolute_error = sklearn.metrics.median_absolute_error(y2['y'], y2['y_pred'])
+    r2 = sklearn.metrics.r2_score(y2['y'], y2['y_pred'])
+    d_t95 = calc_delta_t95(y2['y'], y2['y_pred'])
+    return [i,cor,r2,mean_absolute_error,median_absolute_error,d_t95]
 
 def model_selection(x, y, para=None, metric="median_absolute_error"):
     ## x is a numpy array. shape: sample vs model
@@ -73,14 +78,23 @@ def model_selection(x, y, para=None, metric="median_absolute_error"):
     p.close()
     ## select best combination
     best_i = None
+    best_metric = None
     if metric == "median_absolute_error":
         mae = np.Inf
         for i in data:
-            if mae > i[1]:
+            if mae > i[4]:
                 best_i = i
-                mae = i[1]
+                mae = i[4]
+        best_metric = mae
+    elif metric == "r2":
+        r2 = -np.Inf
+        for i in data:
+            if r2 < i[2]:
+                best_i = i
+                r2 = i[2]
+        best_metric = r2
 
     print("Best model combination based on metric: %s" % (metric))
     print(best_i)
-    return [best_i,data]
+    return [best_i,best_metric,data]
 

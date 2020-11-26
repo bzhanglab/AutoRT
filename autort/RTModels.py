@@ -309,7 +309,7 @@ def ensemble_models(input_data: str, #test_file=None,
     model_list = dict()
 
     ## prepare training and validation data
-    train_file, test_file = split_data_file(input_data,out_dir=out_dir)
+    train_file, test_file = split_data_file(input_data,out_dir=out_dir,test_size=0.1)
 
 
     if ga_file is not None:
@@ -574,16 +574,18 @@ def ensemble_models(input_data: str, #test_file=None,
         para['add_reverse'] = 0
 
     ## save result
-    model_json = out_dir + "/model.json"
+    model_json = out_dir + "/model_all.json"
     with open(model_json, 'w') as f:
         json.dump(model_list, f)
 
     ## best model combination selection
     pred_all, y_true = rt_predict(model_file=model_json, test_file=test_file, out_dir=out_dir, prefix=prefix)
     pred_all = pd.DataFrame(pred_all)
-    best_i, model_data = model_selection(pred_all,y_true,para=para)
+    best_i, best_metric, model_data = model_selection(pred_all,y_true,para=para,metric="r2")
     model_list["best_models"] = ",".join([str(i) for i in best_i[0]])
-    model_list["best_performance"] = best_i[1]
+    model_list["best_performance"] = best_metric
+    model_data = pd.DataFrame(model_data)
+    model_data.to_csv(out_dir+"/models_combination_metrics.tsv",sep="\t",index=False)
 
     ## save result
     model_json = out_dir + "/model.json"
