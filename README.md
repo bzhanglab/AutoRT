@@ -1,6 +1,27 @@
 # [AutoRT](https://doi.org/10.1038/s41467-020-15456-w)
 Peptide retention time prediction using deep learning
 
+
+## Performance of AutoRT
+1. The performance of models trained using more than 100,000 peptides: 
+[Figure 1a](https://www.nature.com/articles/s41467-020-15456-w/figures/2); 
+[Supplementary Figure 1](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf).
+2. The performance of models trained using 700~10,000 peptides with transfer learning strategy: 
+[Figure 1b](https://www.nature.com/articles/s41467-020-15456-w/figures/2); 
+[Supplementary Figure 3](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf); 
+[Supplementary Figure 8-10](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf); 
+3. The performance of models trained using label free, iTRAQ or TMT data: 
+[Figure 1a](https://www.nature.com/articles/s41467-020-15456-w/figures/2); 
+[Figure 1b](https://www.nature.com/articles/s41467-020-15456-w/figures/2); 
+[Supplementary Figure 3](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf); 
+[Supplementary Figure 8-10](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf).
+4. The performance of models trained using immonopeptidomics data: 
+[Supplementary Figure 6](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf); 
+5. The performance of models trained using public iRT data: 
+[Figure 1a](https://www.nature.com/articles/s41467-020-15456-w/figures/2); 
+[Supplementary Figure 1](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf).
+
+
 ## Installation
 
 #### Download AutoRT
