@@ -62,18 +62,33 @@ optional arguments:
   -o OUT_DIR, --out_dir OUT_DIR
                         Output directory
   -e EPOCHS, --epochs EPOCHS
+                        The number of epochs, default is 20.
   -b BATCH_SIZE, --batch_size BATCH_SIZE
+                        Batch size for training, default is 128.
   -r2 MAX_RT, --max_rt MAX_RT
+                        The maximum retention time. If the value is 0 (default), the maximum retention time 
+                        will be automatically infered from the input training data.
   -l MAX_LENGTH, --max_length MAX_LENGTH
-  -p MOD, --mod MOD
-  -u UNIT, --unit UNIT
+                        The length of the longest peptide to consider for modeling. 
+                        If the value is 0 (default), it will be automatically infered from the input training data.
+  -p MOD, --mod MOD     The integer number(s) used to represent modified amino acid(s) in training data. 
+                        For example, if use 1 to represent M with oxidation and 
+                        use 2 to represent S with phosphorylation, then the setting is '-p 1,2'
+  -u UNIT, --unit UNIT  The unit of retention time in training data, s: second (default), m: minute.
   -sm SCALE_METHOD, --scale_method SCALE_METHOD
+                        Scaling method for RT tranformation: min_max (default), mean_std and single_factor. 
+                        This is used in training. Default is 'min_max'. The default method works well in most of cases. 
+                        This should not be changed unless users know well about the meaning of these methods.
   -sf SCALE_FACTOR, --scale_factor SCALE_FACTOR
+                        This is only useful when 'single_factor' is set for '-sm'.
   -m MODEL_FILE, --model_file MODEL_FILE
-  -g GA, --ga GA
-  -r, --add_reverse
+                        Trained model file. Only useful when perform transfer learning and RT prediction.
+  -g GA, --ga GA        Model configuration file. Only useful when train models from scratch.
+  -r, --add_reverse     Add reversed peptide in peptide encoding. This parameter will be removed in a future version.
   -n EARLY_STOP_PATIENCE, --early_stop_patience EARLY_STOP_PATIENCE
+                        Number of epochs with no improvement after which training will be stopped.
   -rlr, --add_ReduceLROnPlateau
+                        Reduce learning rate when a metric has stopped improving.
 ```
 ##### Prediction:
 
@@ -191,6 +206,8 @@ A way to support prediction for peptides with length > 48 is to retrain the base
 ```
 python ../autort.py train -e 100 -b 64 -g ../models/base_models/model.json -u m -p 1 -i data/PXD006109_Cerebellum_rt_add_mox_all_rt_range_3_train.tsv -sm min_max -l 60 -rlr -n 20 -o PXD006109_models/
 ```
+
+The parameter setting for -e, -b, -sm, -rlr and -n for the above examples worked well for many data.
 
 ## How to cite:
 
