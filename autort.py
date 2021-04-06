@@ -33,26 +33,26 @@ def main():
             parser.add_argument('-o', '--out_dir', default="./", type=str,
                                 help="Output directory")
 
-            parser.add_argument('-e', '--epochs', default=20, type=int)
-            parser.add_argument('-b', '--batch_size', default=128, type=int)
-            parser.add_argument('-r2', '--max_rt', default=0, type=int)
-            parser.add_argument('-l', '--max_length', default=0, type=int)
-            parser.add_argument('-p', '--mod', default=None, type=str)
-            parser.add_argument('-u', '--unit', default="s", type=str)
-            parser.add_argument('-sm', '--scale_method', default="min_max", type=str)
-            parser.add_argument('-sf', '--scale_factor', default=None, type=float)
+            parser.add_argument('-e', '--epochs', default=20, type=int,help="The number of epochs, default is 20.")
+            parser.add_argument('-b', '--batch_size', default=128, type=int,help="Batch size for training, default is 128.")
+            parser.add_argument('-r2', '--max_rt', default=0, type=int,help="The maximum retention time. If the value is 0 (default), the maximum retention time will be automatically infered from the input training data.")
+            parser.add_argument('-l', '--max_length', default=0, type=int,help="The length of the longest peptide to consider for modeling. If the value is 0 (default), it will be automatically infered from the input training data.")
+            parser.add_argument('-p', '--mod', default=None, type=str,help="The integer number(s) used to represent modified amino acid(s) in training data. For example, if use 1 to represent M with oxidation and use 2 to represent S with phosphorylation, then the setting is '-p 1,2'")
+            parser.add_argument('-u', '--unit', default="s", type=str,help="The unit of retention time in training data, s: second (default), m: minute.")
+            parser.add_argument('-sm', '--scale_method', default="min_max", type=str,help="Scaling method for RT tranformation: min_max (default), mean_std and single_factor. This is used in training. Default is 'min_max'. The default method works well in most of cases. This should not be changed unless users know well about the meaning of these methods.")
+            parser.add_argument('-sf', '--scale_factor', default=None, type=float,help="This is only useful when 'single_factor' is set for '-sm'.")
 
-            parser.add_argument('-m', '--model_file', default=None, type=str)
-            parser.add_argument('-g', '--ga', default=None, type=str)
+            parser.add_argument('-m', '--model_file', default=None, type=str,help="Trained model file. Only useful when perform transfer learning and RT prediction.")
+            parser.add_argument('-g', '--ga', default=None, type=str,help="Model configuration file. Only useful when train models from scratch.")
             #parser.add_argument('-w', '--top_n', default=10, type=int)
 
             #parser.add_argument('-a', '--radam', action='store_true')
-            parser.add_argument('-r', '--add_reverse', action='store_true')
+            parser.add_argument('-r', '--add_reverse', action='store_true',help="Add reversed peptide in peptide encoding. This parameter will be removed in a future version.")
 
-            parser.add_argument('-n', '--early_stop_patience', default=None, type=int)
+            parser.add_argument('-n', '--early_stop_patience', default=None, type=int,help="Number of epochs with no improvement after which training will be stopped.")
 
             # add_ReduceLROnPlateau
-            parser.add_argument('-rlr', '--add_ReduceLROnPlateau', action='store_true')
+            parser.add_argument('-rlr', '--add_ReduceLROnPlateau', action='store_true',help="Reduce learning rate when a metric has stopped improving.")
 
             args = parser.parse_args(sys.argv[2:len(sys.argv)])
 
