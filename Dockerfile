@@ -54,6 +54,9 @@ RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/lib
     && echo "/usr/local/cuda/lib64/stubs" > /etc/ld.so.conf.d/z-cuda-stubs.conf \
     && ldconfig
 
+ARG PYTHON=python3
+ARG PIP=pip3
+
 # See http://bugs.python.org/issue19846
 ENV LANG C.UTF-8
 
