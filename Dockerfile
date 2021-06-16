@@ -72,11 +72,12 @@ RUN python3 -m pip --no-cache-dir install --upgrade \
 RUN ln -s $(which python3) /usr/local/bin/python
 
 
-RUN ${PIP} install tensorflow-gpu==2.3.1 \
+RUN ${PIP} install tensorflow==2.3.1 \
   matplotlib \
   pandas \
   scikit-learn \
   numpy
+
 
 RUN git clone https://github.com/bzhanglab/AutoRT \
   && mv AutoRT /opt/
