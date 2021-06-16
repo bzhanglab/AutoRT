@@ -637,7 +637,8 @@ def get_model_input_shape(model):
     return model._layers[0]._batch_input_shape
 
 def get_peptide_length_from_model(model):
-    return model._layers[0]._batch_input_shape[1]
+    return model.input_shape[1]
+    #return model._layers[0]._batch_input_shape[1]
 
 
 def ensemble_predict(model_file:str, x, y=None, para=None, out_dir="./", method="average",batch_size=64, prefix="test", use_radam=False):
