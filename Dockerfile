@@ -76,7 +76,7 @@ RUN ${PIP} install tensorflow==2.3.1 \
   matplotlib \
   pandas \
   scikit-learn \
-  numpy
+  numpy==1.16.0
 
 
 RUN git clone https://github.com/bzhanglab/AutoRT \
