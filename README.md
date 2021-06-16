@@ -38,6 +38,11 @@ $ pip install -r requirements.txt
 
 AutoRT has been tested on both Linux and Windows systems. It supports training and prediction on both CPU and GPU, but GPU is recommended for model training.
 
+AutoRT can also be used through docker:
+
+```shell
+docker pull proteomics/autort
+```
 
 ## Usage
 
