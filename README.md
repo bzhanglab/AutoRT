@@ -31,7 +31,7 @@ $ git clone https://github.com/bzhanglab/AutoRT
 ```
 
 #### Installation
-AutoRT is a python3 package. [TensorFlow](https://www.tensorflow.org/) (>=2.5) is supported. Its dependencies can be installed via
+AutoRT is a python3 package. [TensorFlow](https://www.tensorflow.org/) (>=**2.5**) is supported. Its dependencies can be installed via
 ```shell
 $ pip install -r requirements.txt
 ```
