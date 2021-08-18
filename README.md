@@ -15,7 +15,7 @@ Peptide retention time prediction using deep learning
 [Figure 1b](https://www.nature.com/articles/s41467-020-15456-w/figures/2); 
 [Supplementary Figure 3](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf); 
 [Supplementary Figure 8-10](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf).
-4. The performance of models trained using immonopeptidomics data: 
+4. The performance of models trained using immunopeptidomics data: 
 [Supplementary Figure 6](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-15456-w/MediaObjects/41467_2020_15456_MOESM1_ESM.pdf); 
 5. The performance of models trained using public iRT data: 
 [Figure 1a](https://www.nature.com/articles/s41467-020-15456-w/figures/2); 
