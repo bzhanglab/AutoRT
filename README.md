@@ -214,6 +214,11 @@ python ../autort.py train -e 100 -b 64 -g ../models/base_models/model.json -u m 
 
 The parameter setting for -e, -b, -sm, -rlr and -n for the above examples worked well for many data.
 
+
+## Run AutoRT on Google Colab:
+Example: [example/Transfer_learning_using_AutoRT.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Transfer_learning_using_AutoRT.ipynb)
+
+
 ## How to cite:
 
 Wen, B., Li, K., Zhang, Y. et al. Cancer neoantigen prioritization through sensitive and reliable proteogenomics analysis. Nature Communications 11, 1759 (2020). https://doi.org/10.1038/s41467-020-15456-w
