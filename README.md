@@ -1,6 +1,13 @@
 # [AutoRT](https://doi.org/10.1038/s41467-020-15456-w)
 Peptide retention time prediction using deep learning
 
+### Table of contents:
+
+- [Performance of AutoRT](#performance-of-autort)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Run AutoRT on Google Colab](#run-autort-on-google-colab)
+- [How to cite](#how-to-cite)
 
 ## Performance of AutoRT
 1. The performance of models trained using more than 100,000 peptides: 
