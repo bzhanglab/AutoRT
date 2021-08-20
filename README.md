@@ -223,7 +223,7 @@ The parameter setting for -e, -b, -sm, -rlr and -n for the above examples worked
 
 
 ## Run AutoRT on Google Colab:
-Example: [example/Transfer_learning_using_AutoRT.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Transfer_learning_using_AutoRT.ipynb)
+Example: [example/Experiment_specific_RT_prediction_using_AutoRT.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Experiment_specific_RT_prediction_using_AutoRT.ipynb)
 
 
 ## How to cite:
