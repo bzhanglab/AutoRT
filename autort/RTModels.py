@@ -345,10 +345,12 @@ def ensemble_models(input_data: str, #test_file=None,
             print("Model file: %s -> %s" % (str(i), m_file))
 
             with open(m_file, "r") as json_read:
-                models[i] = keras.models.model_from_json(json_read.read())
+                config = json.loads(json_read.read())
+                config["config"]["layers"][0]["config"]["batch_input_shape"][1:] = [X_train.shape[1], X_train.shape[2]]
+                models[i] = keras.models.model_from_json(json.dumps(config))
 
             #models[i]._layers[1].batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
-            models[i]._layers[0]._batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
+            #models[i]._layers[0]._batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
             models[i] = tf.keras.models.model_from_json(models[i].to_json())
             optimizer_name[i] = ga_model_list[i]['optimizer_name']
 
