@@ -811,7 +811,7 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
         for (name, dp_model_file) in model_list['dp_model'].items():
             model_t.add_model(name, dp_model_file)
 
-        trained_model = run_model_t(model_t)
+        trained_model = [run_model_t(model_t)]
 
     for model_t in trained_model:
         for name in model_t.keys():
