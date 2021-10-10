@@ -59,7 +59,7 @@ generate_train_test_data=function(formated_evidence_file,
 
 para <- commandArgs(trailingOnly = TRUE)
 formated_evidence_file <- para[1]
-ratio_for_testing <- para[2]
+ratio_for_testing <- as.numeric(para[2]) 
 out_dir <- para[3]
 
 generate_train_test_data(formated_evidence_file = formated_evidence_file,
