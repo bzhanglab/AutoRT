@@ -810,8 +810,8 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
         model_t = ModelT(models_file, out_dir)
         for (name, dp_model_file) in model_list['dp_model'].items():
             model_t.add_model(name, dp_model_file)
-
-        trained_model = [run_model_t(model_t)]
+        with Pool(1) as p:
+            trained_model = p.map(run_model_t, [model_t])
 
     for model_t in trained_model:
         for name in model_t.keys():
