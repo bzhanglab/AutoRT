@@ -1,0 +1,23 @@
+{
+  "dp_model": {
+    "0": "ptm_model//model_0.h5",
+    "1": "ptm_model//model_1.h5",
+    "2": "ptm_model//model_2.h5",
+    "3": "ptm_model//model_3.h5",
+    "4": "ptm_model//model_4.h5",
+    "5": "ptm_model//model_5.h5",
+    "6": "ptm_model//model_6.h5",
+    "7": "ptm_model//model_7.h5",
+    "8": "ptm_model//model_8.h5",
+    "9": "ptm_model//model_9.h5"
+  },
+  "max_x_length": 60,
+  "aa": "ptm_model//aa.tsv",
+  "rt_min": 0.0,
+  "rt_max": 98.30493262665756,
+  "scaling_method": "min_max",
+  "encode_method": "Embedding",
+  "add_reverse": 0,
+  "best_models": "0,1,2,3,5",
+  "best_performance": 0.4462318991169312
+}

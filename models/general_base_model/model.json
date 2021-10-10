@@ -1,0 +1,23 @@
+{
+  "dp_model": {
+    "0": "PXD006109_general_models//model_0.h5",
+    "1": "PXD006109_general_models//model_1.h5",
+    "2": "PXD006109_general_models//model_2.h5",
+    "3": "PXD006109_general_models//model_3.h5",
+    "4": "PXD006109_general_models//model_4.h5",
+    "5": "PXD006109_general_models//model_5.h5",
+    "6": "PXD006109_general_models//model_6.h5",
+    "7": "PXD006109_general_models//model_7.h5",
+    "8": "PXD006109_general_models//model_8.h5",
+    "9": "PXD006109_general_models//model_9.h5"
+  },
+  "max_x_length": 60,
+  "aa": "PXD006109_general_models//aa.tsv",
+  "rt_min": 0.0,
+  "rt_max": 101.33,
+  "scaling_method": "min_max",
+  "encode_method": "Embedding",
+  "add_reverse": 0,
+  "best_models": "0,1,2,5,7",
+  "best_performance": 0.3628936388455877
+}

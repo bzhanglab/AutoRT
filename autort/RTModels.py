@@ -1,3 +1,5 @@
+import math
+
 from tensorflow import keras
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger, ReduceLROnPlateau, LearningRateScheduler
 from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten, Input, MaxPooling2D, Conv2D, Conv1D, Bidirectional, LSTM, \
@@ -20,13 +22,16 @@ from .Utils import scaling_y, scaling_y_rev, combine_rts
 from .Metrics import evaluate_model,model_selection
 
 #from .PolynomialDecay import PolynomialDecay
-
+from multiprocessing import Pool
+import math
 
 import pickle
 import json
 import numpy as np
 from shutil import copyfile
 import sys
+from .ModelT import ModelT, run_model_t
+from multiprocessing import Process
 
 #from .AdamW import AdamW
 
@@ -73,7 +78,7 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
                 max_x_length = 50, scale_para=None, unit="s",out_dir="./", prefix = "test",
                 p_model=None,
                 model=None, optimizer_name=None,use_radam=False,add_reverse=False,add_ReduceLROnPlateau=False,
-                use_external_test_data=True):
+                use_external_test_data=True,seq_encode_method="one_hot"):
     """
     Used by AutoRT
     :param input_data:
@@ -106,7 +111,8 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
     X_train, Y_train, X_test, Y_test, scale_para = data_processing(input_data=input_data, test_file = test_file,
                                                                    mod = mod, max_x_length = max_x_length,
                                                                    scale_para=scale_para, unit = unit,out_dir=out_dir,
-                                                                   add_reverse=add_reverse)
+                                                                   add_reverse=add_reverse,
+                                                                   seq_encode_method=seq_encode_method)
 
     print("Save training and testing data to file:\n")
     np.save("X_train", X_train)
@@ -281,9 +287,24 @@ def train_model(input_data: str, test_file=None, batch_size=64, nb_epoch=100, ea
     res_map['model'] = model_best
     return res_map
 
+def get_peptide_encode_method_from_model(model_file:str):
+    peptide_encode_method = "one_hot"
+    ## model_file is a json file
+    with open(model_file, "r") as read_file:
+        model_list = json.load(read_file)
+
+    ## trained model
+    if "dp_model" in model_list.keys():
+        peptide_encode_method = model_list["encode_method"]
+    else:
+        for i in model_list.keys():
+            if "encode_method" in model_list[i]:
+                peptide_encode_method = model_list[i]["encode_method"]
+
+    return peptide_encode_method
 
 
-def ensemble_models(input_data: str, #test_file=None,
+def ensemble_models_v0(input_data: str, #test_file=None,
                     models_file=None,
                     ga_file=None,
                     ensemble_method="average",
@@ -311,12 +332,16 @@ def ensemble_models(input_data: str, #test_file=None,
     ## prepare training and validation data
     train_file, test_file = split_data_file(input_data,out_dir=out_dir,test_size=0.1)
 
+    peptide_encode_method = "one_hot"
 
     if ga_file is not None:
+
+        peptide_encode_method = get_peptide_encode_method_from_model(ga_file)
         X_train, Y_train, X_test, Y_test, scale_para = data_processing(input_data=input_data, #test_file=test_file,
-                                                                           mod=mod, max_x_length=max_x_length,
-                                                                           scale_para=scale_para, unit=unit,
-                                                                           out_dir=out_dir,add_reverse=add_reverse)
+                                                                       mod=mod, max_x_length=max_x_length,
+                                                                       scale_para=scale_para, unit=unit,
+                                                                       out_dir=out_dir,add_reverse=add_reverse,
+                                                                       seq_encode_method=peptide_encode_method)
         model_list['dp_model'] = dict()
         model_list['max_x_length'] = X_train.shape[1]
         model_list['aa'] = out_dir + "/aa.tsv"
@@ -345,13 +370,11 @@ def ensemble_models(input_data: str, #test_file=None,
             print("Model file: %s -> %s" % (str(i), m_file))
 
             with open(m_file, "r") as json_read:
-                config = json.loads(json_read.read())
-                config["config"]["layers"][0]["config"]["batch_input_shape"][1:] = [X_train.shape[1], X_train.shape[2]]
-                models[i] = keras.models.model_from_json(json.dumps(config))
+                models[i] = keras.models.model_from_json(json_read.read())
 
             #models[i]._layers[1].batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
             #models[i]._layers[0]._batch_input_shape = (None, X_train.shape[1], X_train.shape[2])
-            models[i] = tf.keras.models.model_from_json(models[i].to_json())
+            #models[i] = tf.keras.models.model_from_json(models[i].to_json())
             optimizer_name[i] = ga_model_list[i]['optimizer_name']
 
         print("Training ...")
@@ -364,7 +387,8 @@ def ensemble_models(input_data: str, #test_file=None,
                                   max_x_length=max_x_length, scale_para=scale_para, unit=unit,
                                   out_dir=out_dir, prefix=str(name), model=model,
                                   optimizer_name=optimizer_name[name], use_radam=use_radam, add_reverse=add_reverse,
-                                  add_ReduceLROnPlateau=add_ReduceLROnPlateau)
+                                  add_ReduceLROnPlateau=add_ReduceLROnPlateau,
+                                  seq_encode_method=peptide_encode_method)
 
             ## save the model to a file:
             model_file_name = "model_" + str(name) + ".h5"
@@ -400,6 +424,8 @@ def ensemble_models(input_data: str, #test_file=None,
             print("The max length (%d) in the training data should be <= the length supported by the model %d" % (peptide_max_length, model_list['max_x_length']))
             sys.exit()
 
+        peptide_encode_method = get_peptide_encode_method_from_model(models_file)
+
         for (name, dp_model_file) in model_list['dp_model'].items():
             print("\nDeep learning model:", name)
 
@@ -410,7 +436,8 @@ def ensemble_models(input_data: str, #test_file=None,
                                                                            scale_para=scale_para, unit=unit,
                                                                            out_dir=out_dir, aa_file=aa_file,
                                                                            add_reverse=add_reverse,
-                                                                           random_seed=model_i)
+                                                                           random_seed=model_i,
+                                                                           seq_encode_method=peptide_encode_method)
 
             model_i = model_i + 1
             # keras model evaluation: loss and accuracy
@@ -441,6 +468,7 @@ def ensemble_models(input_data: str, #test_file=None,
 
             print("Perform transfer learning ...")
             n_layers = len(new_model.layers)
+            new_model.get_layer("embedding").trainable = False
             print("The number of layers: %d" % (n_layers))
 
             '''
@@ -557,6 +585,9 @@ def ensemble_models(input_data: str, #test_file=None,
     model_list['rt_max'] = scale_para['rt_max']
     model_list['scaling_method'] = scale_para['scaling_method']
 
+    model_list['encode_method'] = peptide_encode_method
+
+
 
     if scale_para['scaling_method'] == "mean_std":
         para['rt_mean'] = scale_para['rt_mean']
@@ -594,6 +625,264 @@ def ensemble_models(input_data: str, #test_file=None,
     with open(model_json, 'w') as f:
         json.dump(model_list, f)
     ####################################################################################################################
+
+
+def get_aa_file(model_file):
+    model_folder = os.path.dirname(model_file)
+    aa_file = model_folder + "/aa.tsv"
+    if not os.path.isfile(aa_file):
+        print("Amino acid file not found:%s" % (aa_file))
+        sys.exit()
+
+    return aa_file
+
+
+def use_one_model(model_file, new_model_file, use_model_id="0"):
+    with open(model_file, "r") as read_file:
+        model_list = json.load(read_file)
+    selected_model = {use_model_id: model_list['dp_model'][use_model_id]}
+    model_list['dp_model'] = selected_model
+    with open(new_model_file, 'w') as f:
+        json.dump(model_list, f, indent=2)
+
+
+def use_selected_model(model_file, use_model_id="0"):
+    with open(model_file, "r") as read_file:
+        model_list = json.load(read_file)
+    selected_model = {use_model_id: model_list['dp_model'][use_model_id]}
+    model_list['dp_model'] = selected_model
+    return model_list
+
+
+def two_step_ensemble_models(models_file:str, input_data:str,
+                    ensemble_method="average",
+                    batch_size=64, nb_epoch=100,
+                    scale_para=None, unit="s",
+                    out_dir="./",
+                    prefix="test",
+                    early_stop_patience=0,
+                    add_reverse=False,
+                    add_ReduceLROnPlateau=False,
+                    gpu_device=None,
+                    do_evaluation_after_each_epoch=False,
+                    outlier_ratio=0.03):
+    # step 1: training
+    print("Step 1:\n")
+    tmp_model_dir = out_dir + "/step1"
+    if not os.path.exists(tmp_model_dir):
+        os.makedirs(tmp_model_dir)
+
+    ensemble_models(models_file=models_file, input_data=input_data, ensemble_method=ensemble_method,
+                    batch_size=batch_size, nb_epoch=nb_epoch,
+                    scale_para=scale_para, unit=unit,
+                    out_dir=tmp_model_dir, prefix=prefix,
+                    early_stop_patience=early_stop_patience,
+                    add_reverse=add_reverse,
+                    add_ReduceLROnPlateau=add_ReduceLROnPlateau,
+                    gpu_device=gpu_device,
+                    do_evaluation_after_each_epoch=do_evaluation_after_each_epoch,
+                    select_best_models=False,
+                    use_model_id="0")
+    tmp_prediction_dir = out_dir + "/step1/prediction/"
+    if not os.path.exists(tmp_prediction_dir):
+        os.makedirs(tmp_prediction_dir)
+
+    rt_predict(model_file=tmp_model_dir + "/model.json", test_file=input_data, out_dir=tmp_prediction_dir,
+               prefix=prefix, gpu_device=gpu_device)
+    a = pd.read_csv(tmp_prediction_dir+"/"+str(prefix)+".tsv", sep="\t", low_memory=False)
+    a['rt_error'] = np.abs(a['y'] - a['y_pred'])
+    a.sort_values(by=['rt_error'], inplace=True, ascending=False)
+    top_n = math.ceil(a.shape[0] * outlier_ratio)
+    a_top = a.head(top_n)
+    a.to_csv(tmp_prediction_dir + "/pred_sorted.tsv", sep="\t", index=False)
+    a_top.to_csv(tmp_prediction_dir+"/top_n_outlier.tsv", sep="\t", index=False)
+    all_train = pd.read_csv(input_data, sep="\t", low_memory=False)
+    new_all_train = all_train[~all_train['x'].isin(list(a_top['x']))]
+    new_train_data_file = out_dir + "/new_train_data.tsv"
+    new_all_train.to_csv(new_train_data_file, sep="\t", index=False)
+
+    # step 2: training
+    print("Step 2:\n")
+    ensemble_models(models_file=models_file, input_data=new_train_data_file, ensemble_method=ensemble_method,
+                    batch_size=batch_size, nb_epoch=nb_epoch,
+                    scale_para=scale_para, unit=unit,
+                    out_dir=out_dir, prefix=prefix,
+                    early_stop_patience=early_stop_patience,
+                    add_reverse=add_reverse,
+                    add_ReduceLROnPlateau=add_ReduceLROnPlateau,
+                    gpu_device=gpu_device,
+                    do_evaluation_after_each_epoch=do_evaluation_after_each_epoch)
+
+
+def ensemble_models(models_file:str, input_data:str, #test_file=None,
+                    ensemble_method="average",
+                    batch_size=64, nb_epoch=100, #mod=None,
+                    #max_x_length=50, # not useful
+                    scale_para=None, unit="s",
+                    out_dir="./",
+                    prefix="test",
+                    #use_radam=False,
+                    early_stop_patience=0,
+                    add_reverse=False,
+                    add_ReduceLROnPlateau=False,
+                    gpu_device=None,
+                    do_evaluation_after_each_epoch=False,
+                    select_best_models=True,
+                    use_model_id=None):
+    """
+    This function is used to ensemble multiple deep learning models. It can be used for training and testing.
+    """
+    with open(models_file, "r") as read_file:
+        model_list = json.load(read_file)
+
+    if use_model_id is not None:
+        model_list = use_selected_model(models_file,use_model_id=use_model_id)
+
+    max_x_length = model_list['max_x_length']
+    peptide_encode_method = get_peptide_encode_method_from_model(models_file)
+    aa_file = get_aa_file(models_file)
+
+    # prepare training and validation data
+    train_file, test_file = split_data_file(input_data, out_dir=out_dir, test_size=0.1)
+    X_train, Y_train, X_test, Y_test, scale_para = data_processing(input_data=train_file, test_file=test_file,
+                                                                   max_x_length=max_x_length,
+                                                                   scale_para=scale_para, unit=unit,
+                                                                   out_dir=out_dir,
+                                                                   aa_file=aa_file,
+                                                                   add_reverse=add_reverse,
+                                                                   random_seed=2021,
+                                                                   seq_encode_method=peptide_encode_method)
+
+    new_model_list = dict()
+    new_model_list['dp_model'] = dict()
+
+    # peptide length check
+    peptide_max_length = get_max_length_from_input_data(input_data)
+    if peptide_max_length > model_list['max_x_length']:
+        print("The max length (%d) in the training data should be <= the length supported by the model %d" % (
+        peptide_max_length, model_list['max_x_length']))
+        sys.exit()
+
+    ModelT.scale_para = scale_para
+    ModelT.x_train = X_train
+    ModelT.y_train = Y_train
+    ModelT.x_test = X_test
+    ModelT.y_test = Y_test
+    ModelT.batch_size = batch_size
+    ModelT.n_epoch = nb_epoch
+    ModelT.add_ReduceLROnPlateau = add_ReduceLROnPlateau
+    ModelT.early_stop_patience = early_stop_patience
+    ModelT.do_evaluation_after_each_epoch = do_evaluation_after_each_epoch
+
+    if gpu_device is not None:
+        gpu_device = str(gpu_device)
+        gpus_ids = gpu_device.split(",")
+        print("Use GPU:")
+        print(gpus_ids)
+
+        model_tasks = list()
+
+        n_total_models = 0
+        model_name_list = list()
+        model_file_path = list()
+        for (name, dp_model_file) in model_list['dp_model'].items():
+            n_total_models = n_total_models + 1
+            model_name_list.append(name)
+            model_file_path.append(dp_model_file)
+
+        n_total_models = len(model_list['dp_model'])
+        n_per_task = math.ceil(1.0 * n_total_models / len(gpus_ids))
+        print("Total GPUs: %d" % (len(gpus_ids)))
+        print("GPU device: %s" % (gpus_ids))
+        print("Tasks on each GPU: %d" % (n_per_task))
+
+        for i in range(len(gpus_ids)):
+            model_tasks.append(ModelT(models_file, out_dir))
+            model_tasks[i].add_gpu_device(gpus_ids[i])
+            for j in range(n_per_task):
+                if len(model_name_list) >= 1:
+                    model_tasks[i].add_model(model_name_list.pop(0), model_file_path.pop(0))
+
+        with Pool(len(gpus_ids)) as p:
+            trained_model = p.map(run_model_t, model_tasks)
+    else:
+        print("Use one GPU or no GPU!")
+        model_t = ModelT(models_file, out_dir)
+        for (name, dp_model_file) in model_list['dp_model'].items():
+            model_t.add_model(name, dp_model_file)
+
+        trained_model = run_model_t(model_t)
+
+    for model_t in trained_model:
+        for name in model_t.keys():
+            new_model_list["dp_model"][name] = model_t[name]
+
+    new_model_list['max_x_length'] = model_list['max_x_length']
+    new_aa_file = out_dir + "/" + os.path.basename(model_list['aa'])
+    copyfile(aa_file, new_aa_file)
+    new_model_list['aa'] = new_aa_file
+
+    model_list = new_model_list
+
+    ####################################################################################################################
+    print("Ensemble learning ...")
+
+    para = dict()
+    para['rt_min'] = scale_para['rt_min']
+    para['rt_max'] = scale_para['rt_max']
+    para['scaling_method'] = scale_para['scaling_method']
+
+    model_list['rt_min'] = scale_para['rt_min']
+    model_list['rt_max'] = scale_para['rt_max']
+    model_list['scaling_method'] = scale_para['scaling_method']
+
+    model_list['encode_method'] = peptide_encode_method
+
+    if scale_para['scaling_method'] == "mean_std":
+        para['rt_mean'] = scale_para['rt_mean']
+        para['rt_std'] = scale_para['rt_std']
+        model_list['rt_mean'] = scale_para['rt_mean']
+        model_list['rt_std'] = scale_para['rt_std']
+
+    elif scale_para['scaling_method'] == "single_factor":
+        para['scaling_factor'] = scale_para['scaling_factor']
+        model_list['scaling_factor'] = scale_para['scaling_factor']
+
+    if add_reverse is True:
+        model_list['add_reverse'] = 1
+        para['add_reverse'] = 1
+    else:
+        model_list['add_reverse'] = 0
+        para['add_reverse'] = 0
+
+    if select_best_models:
+        # save result
+        print("Select best models ...")
+        model_json = out_dir + "/model_all.json"
+        with open(model_json, 'w') as f:
+            json.dump(model_list, f, indent=2)
+
+        # best model combination selection
+        pred_all, y_true = rt_predict(model_file=model_json, test_file=test_file, out_dir=out_dir, prefix=prefix,
+                                      gpu_device=gpu_device)
+        pred_all = pd.DataFrame(pred_all)
+        best_i, best_metric, model_data = model_selection(pred_all,y_true,para=para,metric="median_absolute_error")
+        model_list["best_models"] = ",".join([str(i) for i in best_i[0]])
+        model_list["best_performance"] = best_metric
+        model_data = pd.DataFrame(model_data)
+        model_data.to_csv(out_dir+"/models_combination_metrics.tsv", sep="\t", index=False)
+
+    # save result
+    model_json = out_dir + "/model.json"
+    with open(model_json, 'w') as f:
+        json.dump(model_list, f, indent=2)
+    ####################################################################################################################
+
+
+def train_with_multiple_gpus(model_file:str,x_train_file:str,y_train_file:str,x_test_file:str,y_test_file:str,para,out_dir="./"):
+    # for each
+    print("TODO")
+
 
 def change_model(model, new_input_shape):
     # replace input shape of first layer
@@ -681,7 +970,12 @@ def ensemble_predict(model_file:str, x, y=None, para=None, out_dir="./", method=
     else:
         return y_pr_final
 
-def rt_predict(model_file:str, test_file:str, out_dir="./", prefix="test", method = "average", use_radam=False):
+def rt_predict(model_file:str, test_file:str, out_dir="./", prefix="test", method = "average", use_radam=False, gpu_device=None):
+
+    if gpu_device is not None:
+        print("Use GPU device: %s" % (str(gpu_device)))
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_device)
 
     res_to_file = np.empty(0)
     ## prediction result
@@ -689,13 +983,15 @@ def rt_predict(model_file:str, test_file:str, out_dir="./", prefix="test", metho
 
     y_true = None
 
+    peptide_encode_method = get_peptide_encode_method_from_model(model_file)
+
     if method == "average":
         print("Average ...")
 
         with open(model_file, "r") as read_file:
             model_list = json.load(read_file)
 
-        x_predict_data = processing_prediction_data(model_file, test_file)
+        x_predict_data = processing_prediction_data(model_file, test_file, seq_encode_method=peptide_encode_method)
 
         input_data = pd.read_table(test_file, sep="\t", header=0, low_memory=False)
 
@@ -774,13 +1070,19 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
         #    model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
         #else:
         #    model = load_model(model_full_path,custom_objects = {"Lookahead": Lookahead, "RAdam":RAdam})
-        model = tf.keras.models.load_model(model_full_path)
+
+        pred_np_file = out_dir + "/" + str(prefix) + "_" + str(name) + ".npy"
+        p = Process(target=do_prediction, args=(model_full_path,x,y,batch_size,pred_np_file))
+        p.start()
+        p.join()
+        y_prob = np.load(pred_np_file)
+        #model = tf.keras.models.load_model(model_full_path)
 
         #avg_models.append(model)
 
         #print("batch size: "+str(batch_size))
 
-        y_prob = model.predict(x,batch_size=batch_size)
+        #y_prob = model.predict(x,batch_size=batch_size)
         ## for class 1
         #y_prob_dp_vector = y_prob[:, 1]
         y_prob_dp_vector = y_prob
@@ -791,9 +1093,9 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
             y_dp = y_prob_dp
 
         if y is not None:
-            evaluation_res = model.evaluate(x, y)
-            print("Metrics:")
-            print(evaluation_res)
+            #evaluation_res = model.evaluate(x, y)
+            #print("Metrics:")
+            #print(evaluation_res)
 
             # ROC
             if len(y.shape) >= 2:
@@ -803,9 +1105,21 @@ def dl_models_predict(model_file, x, y=None,batch_size=2048, out_dir="./", prefi
             out_prefix = prefix + "_" + str(name)
             evaluate_model(y_true_class, y_prob_dp_vector, para=model_list, out_dir=out_dir, prefix=out_prefix)
 
-        del model
+        #del model
         gc.collect()
         K.clear_session()
         #tf.reset_default_graph()
 
     return y_dp
+
+
+def do_prediction(model_full_path,x,y,batch_size,out_file):
+    model = tf.keras.models.load_model(model_full_path)
+    y_prob = model.predict(x, batch_size=batch_size)
+    np.save(out_file, y_prob)
+    with open(out_file, 'wb') as f:
+        np.save(f, y_prob)
+    if y is not None:
+        evaluation_res = model.evaluate(x, y)
+        print("Metrics:")
+        print(evaluation_res)

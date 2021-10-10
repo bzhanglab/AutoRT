@@ -4,6 +4,7 @@ seed(2019)
 #from tensorflow import set_random_seed
 #set_random_seed(2020)
 from sklearn.model_selection import train_test_split
+import sys
 
 
 import matplotlib
@@ -16,7 +17,7 @@ from .Utils import scaling_y, scaling_y_rev
 
 
 def data_processing(input_data: str, test_file=None, mod=None, max_x_length = 50, scale_para=None, unit="s",
-                    out_dir="./", aa_file=None, add_reverse=False, random_seed=2018):
+                    out_dir="./", aa_file=None, add_reverse=False, random_seed=2018, seq_encode_method="one_hot"):
     """
     Used by AutoRT
     Processing training data
@@ -126,18 +127,14 @@ def data_processing(input_data: str, test_file=None, mod=None, max_x_length = 50
 
     siteData = siteData.sample(siteData.shape[0], replace=False, random_state=2018)
 
-    if add_reverse is True:
-        train_data = np.zeros((siteData.shape[0], 2*max_x_length, n_aa_types))
-    else:
-        train_data = np.zeros((siteData.shape[0], max_x_length, n_aa_types))
+    #if add_reverse is True:
+    #    train_data = np.zeros((siteData.shape[0], 2*max_x_length, n_aa_types))
+    #else:
+    #    train_data = np.zeros((siteData.shape[0], max_x_length, n_aa_types))
 
-    k = 0
-    for i, row in siteData.iterrows():
-        peptide = row['x']
-        train_data[k] = encodePeptideOneHot(peptide, max_length=max_x_length, add_reverse=add_reverse)
-        k = k + 1
-
-    train_data = train_data.reshape(train_data.shape[0], train_data.shape[1], train_data.shape[2])
+    train_data = encodePeptides(siteData,max_length=max_x_length,seq_encode_method=seq_encode_method)
+    if seq_encode_method == "one_hot":
+        train_data = train_data.reshape((train_data.shape[0], train_data.shape[1], train_data.shape[2]))
 
     X_test = np.empty(1)
     Y_test = np.empty(1)
@@ -171,17 +168,16 @@ def data_processing(input_data: str, test_file=None, mod=None, max_x_length = 50
             X_test = np.zeros((test_data.shape[0], 2*max_x_length, n_aa_types))
         else:
             X_test = np.zeros((test_data.shape[0], max_x_length, n_aa_types))
-        k = 0
-        for i, row in test_data.iterrows():
-            peptide = row['x']
-            X_test[k] = encodePeptideOneHot(peptide, max_length=max_x_length, add_reverse=add_reverse)
-            k = k + 1
+
+        X_test = encodePeptides(test_data,max_length=max_x_length,seq_encode_method=seq_encode_method)
+        if seq_encode_method == "one_hot":
+            X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], X_test.shape[2]))
 
         Y_test = scaling_y(test_data['y'],scale_para)
 
-
-    X_train = X_train.astype('float32')
-    X_test = X_test.astype('float32')
+    if seq_encode_method == "one_hot":
+        X_train = X_train.astype('float32')
+        X_test = X_test.astype('float32')
 
     print("X_train shape:")
     print(X_train.shape)
@@ -208,7 +204,7 @@ def get_max_length_from_input_data(input_data:str):
 
     return longest_pep
 
-def processing_prediction_data(model_file: str, input_data: str):
+def processing_prediction_data(model_file: str, input_data: str, seq_encode_method="one_hot"):
     '''
     Used by AutoRT
     :param model_file: model file in json format
@@ -258,21 +254,22 @@ def processing_prediction_data(model_file: str, input_data: str):
     print(sorted(all_aa))
 
     # siteData = siteData.sample(siteData.shape[0], replace=False, random_state=2018)
-    if add_reverse is True:
-        train_data = np.zeros((siteData.shape[0], 2*max_x_length, n_aa_types))
-    else:
-        train_data = np.zeros((siteData.shape[0], max_x_length, n_aa_types))
+    #if add_reverse is True:
+    #    train_data = np.zeros((siteData.shape[0], 2*max_x_length, n_aa_types))
+    #else:
+    #    train_data = np.zeros((siteData.shape[0], max_x_length, n_aa_types))
 
-    k = 0
-    for i, row in siteData.iterrows():
-        peptide = row['x']
-        train_data[k] = encodePeptideOneHot(peptide, max_length=max_x_length, add_reverse=add_reverse)
-        k = k + 1
+    #k = 0
+    #for i, row in siteData.iterrows():
+    #    peptide = row['x']
+    #    train_data[k] = encodePeptideOneHot(peptide, max_length=max_x_length, add_reverse=add_reverse)
+    #    k = k + 1
 
-    train_data = train_data.reshape(train_data.shape[0], train_data.shape[1], train_data.shape[2])
+    train_data = encodePeptides(siteData,max_length=max_x_length,seq_encode_method=seq_encode_method)
+    if seq_encode_method == "one_hot":
+        train_data = train_data.reshape((train_data.shape[0], train_data.shape[1], train_data.shape[2]))
+        train_data = train_data.astype('float32')
 
-
-    train_data = train_data.astype('float32')
 
     return train_data
 

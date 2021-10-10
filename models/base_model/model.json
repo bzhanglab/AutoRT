@@ -1,0 +1,17 @@
+{
+  "dp_model": {
+    "0": "ga_models/model_0.h5",
+    "1": "ga_models/model_1.h5",
+    "2": "ga_models/model_2.h5",
+    "3": "ga_models/model_3.h5",
+    "4": "ga_models/model_4.h5",
+    "5": "ga_models/model_5.h5",
+    "6": "ga_models/model_6.h5",
+    "7": "ga_models/model_7.h5",
+    "8": "ga_models/model_8.h5",
+    "9": "ga_models/model_9.h5"
+  },
+  "encode_method": "Embedding",
+  "max_x_length": 60,
+  "aa": "ga_models/aa.tsv"
+}
