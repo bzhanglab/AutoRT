@@ -115,7 +115,7 @@ def get_fraction_name(name):
 def format_mq_evidence(mq_evidence_file, out_file="evidence_format.tsv",
                        target_mod="Acetyl (K)",
                        remove_mods=None,
-                       score_cutoff=40):
+                       score_cutoff=0):
     if remove_mods is None:
         remove_mods = ['Acetyl (Protein N-term)', 'Dimethyl (KR)', 'Trimethyl (K)']
 
