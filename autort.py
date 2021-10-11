@@ -34,8 +34,8 @@ def main():
             parser.add_argument('-o', '--out_dir', default="./", type=str,
                                 help="Output directory")
 
-            parser.add_argument('-e', '--epochs', default=100, type=int,help="The number of epochs, default is 20.")
-            parser.add_argument('-b', '--batch_size', default=64, type=int,help="Batch size for training, default is 128.")
+            parser.add_argument('-e', '--epochs', default=40, type=int,help="The number of epochs, default is 40.")
+            parser.add_argument('-b', '--batch_size', default=64, type=int,help="Batch size for training, default is 64.")
             parser.add_argument('-r2', '--max_rt', default=0, type=int,help="The maximum retention time. If the value is 0 (default), the maximum retention time will be automatically infered from the input training data.")
             #parser.add_argument('-l', '--max_length', default=0, type=int,help="The length of the longest peptide to consider for modeling. If the value is 0 (default), it will be automatically infered from the input training data.")
             #parser.add_argument('-p', '--mod', default=None, type=str,help="The integer number(s) used to represent modified amino acid(s) in training data. For example, if use 1 to represent M with oxidation and use 2 to represent S with phosphorylation, then the setting is '-p 1,2'")
