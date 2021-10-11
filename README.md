@@ -60,13 +60,6 @@ AutoRT supports training models from scratch as well as transfer learning. We re
 ##### Training:
 ```
 $ python autort.py train -h
-usage: autort.py [-h] -i INPUT [-o OUT_DIR] [-e EPOCHS] [-b BATCH_SIZE]
-                 [-r2 MAX_RT] [-l MAX_LENGTH] [-p MOD] [-u UNIT]
-                 [-sm SCALE_METHOD] [-sf SCALE_FACTOR] [-m MODEL_FILE] [-g GA]
-                 [-r] [-n EARLY_STOP_PATIENCE] [-rlr]
-
-AutoRT
-
 optional arguments:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
@@ -78,29 +71,25 @@ optional arguments:
   -b BATCH_SIZE, --batch_size BATCH_SIZE
                         Batch size for training, default is 128.
   -r2 MAX_RT, --max_rt MAX_RT
-                        The maximum retention time. If the value is 0 (default), the maximum retention time 
-                        will be automatically infered from the input training data.
-  -l MAX_LENGTH, --max_length MAX_LENGTH
-                        The length of the longest peptide to consider for modeling. 
-                        If the value is 0 (default), it will be automatically infered from the input training data.
-  -p MOD, --mod MOD     The integer number(s) used to represent modified amino acid(s) in training data. 
-                        For example, if use 1 to represent M with oxidation and 
-                        use 2 to represent S with phosphorylation, then the setting is '-p 1,2'
-  -u UNIT, --unit UNIT  The unit of retention time in training data, s: second (default), m: minute.
+                        The maximum retention time. If the value is 0 (default), the maximum retention time will be automatically infered from the input training data.
+  -u UNIT, --unit UNIT  The unit of retention time in training data, s: second, m: minute (default).
   -sm SCALE_METHOD, --scale_method SCALE_METHOD
-                        Scaling method for RT tranformation: min_max (default), mean_std and single_factor. 
-                        This is used in training. Default is 'min_max'. The default method works well in most of cases. 
-                        This should not be changed unless users know well about the meaning of these methods.
+                        Scaling method for RT tranformation: min_max (default), mean_std and single_factor. This is used in training. Default is 'min_max'. The default method works well in most of cases. This should not be
+                        changed unless users know well about the meaning of these methods.
   -sf SCALE_FACTOR, --scale_factor SCALE_FACTOR
                         This is only useful when 'single_factor' is set for '-sm'.
   -m MODEL_FILE, --model_file MODEL_FILE
                         Trained model file. Only useful when perform transfer learning and RT prediction.
-  -g GA, --ga GA        Model configuration file. Only useful when train models from scratch.
   -r, --add_reverse     Add reversed peptide in peptide encoding. This parameter will be removed in a future version.
   -n EARLY_STOP_PATIENCE, --early_stop_patience EARLY_STOP_PATIENCE
                         Number of epochs with no improvement after which training will be stopped.
   -rlr, --add_ReduceLROnPlateau
                         Reduce learning rate when a metric has stopped improving.
+  -g GPU, --gpu GPU     Set gpu IDs that can be used. For example: 1,2,3.
+  -d, --do_evaluation_after_each_epoch
+                        Do evaluation after each epoch during model training.
+  -f OUTLIER_RATIO, --outlier_ratio OUTLIER_RATIO
+                        The percentage of data (outlier) will be removed from the training data using a two-step training.
 ```
 ##### Prediction:
 
