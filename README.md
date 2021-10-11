@@ -208,6 +208,7 @@ The training took less than 12 hours using one Titan Xp GPU on a Linux server.
 ## Run AutoRT on Google Colab:
 
 Example: [example/Experiment_specific_RT_prediction_using_AutoRT.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Experiment_specific_RT_prediction_using_AutoRT.ipynb)
+
 Example: [example/Phosphorylation_experiment_specific_RT_prediction_using_AutoRT_Colab.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Phosphorylation_experiment_specific_RT_prediction_using_AutoRT_Colab.ipynb)
 
 
