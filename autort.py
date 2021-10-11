@@ -55,7 +55,7 @@ def main():
             # add_ReduceLROnPlateau
             parser.add_argument('-rlr', '--add_ReduceLROnPlateau', action='store_true',help="Reduce learning rate when a metric has stopped improving.")
 
-            parser.add_argument('-g', '--gpu', default=None, type=str,help="If want to use multiple GPUs, give the gpu IDs. For example: 1,2,3.")
+            parser.add_argument('-g', '--gpu', default=None, type=str,help="Set gpu IDs that can be used. For example: 1,2,3.")
             parser.add_argument('-d', '--do_evaluation_after_each_epoch', action='store_true',help="Do evaluation after each epoch during model training.")
             parser.add_argument('-f', '--outlier_ratio', default=0.03, type=float,
                                 help="The percentage of data (outlier) will be removed from the training data using a two-step training.")
