@@ -67,9 +67,9 @@ optional arguments:
   -o OUT_DIR, --out_dir OUT_DIR
                         Output directory
   -e EPOCHS, --epochs EPOCHS
-                        The number of epochs, default is 20.
+                        The number of epochs, default is 40.
   -b BATCH_SIZE, --batch_size BATCH_SIZE
-                        Batch size for training, default is 128.
+                        Batch size for training, default is 64.
   -r2 MAX_RT, --max_rt MAX_RT
                         The maximum retention time. If the value is 0 (default), the maximum retention time will be automatically infered from the input training data.
   -u UNIT, --unit UNIT  The unit of retention time in training data, s: second, m: minute (default).
@@ -155,12 +155,31 @@ SSPVEYEFFWGPR               81.73833333333333
 AIPSYSHLR                   29.95825
 ```
 
+##### An example to show how to train a highly accurate RT model using a small dataset from a global proteome experiment:
+
+Please note that the length of the longest peptide in the training data must be **<= 60** which is the maximum length supported by the based models in the github folder **models/general_base_model/**. 
+
+```
+$ cd example
+$ cat transfer_learning.sh
+## training
+python ../autort.py train -i data/28CPTAC_COprospective_W_VU_20150810_05CO037_f01_normal_train.tsv -o tf_model/ -e 40 -b 64 -u m -m ../models/general_base_model/model.json -rlr -n 10
+
+## prediction
+python ../autort.py predict -t data/28CPTAC_COprospective_W_VU_20150810_05CO037_f01_normal_test.tsv -s tf_model/model.json -o tf_prediction/ -p test
+```
+
+The training took less than 20 minutes using one Titan Xp GPU on a Linux server.
+
+
+The parameter setting for -e, -b, -sm, -rlr and -n for the above examples worked well for many data.
+
 ##### An example to show how to train models from scratch:
 
 ```shell
 cd example
 ## training
-python ../autort.py train -e 100 -b 64 -g ../models/base_models/model.json -u m -p 1 -i data/PXD006109_Cerebellum_rt_add_mox_all_rt_range_3_train.tsv -sm min_max -l 48 -rlr -n 20 -o PXD006109_models/
+python ../autort.py train -e 100 -b 64 -g ../models/base_model/model.json -u m -p 1 -i data/PXD006109_Cerebellum_rt_add_mox_all_rt_range_3_train.tsv -sm min_max -l 48 -rlr -n 20 -o PXD006109_models/
 ```
 After the training is finished, the trained model files are saved in the folder `PXD006109_models/`.
 
@@ -186,33 +205,10 @@ AIPSYSHLR                 29.95825	        31.344095
 
 The training took less than 12 hours using one Titan Xp GPU on a Linux server.
 
-##### An example to show how to perform transfer learning:
-
-Please note that the length of the longest peptide in the training data must be **<= 48** which is the maximum length supported by the based models in the github folder **models/base_models_PXD006109/**. 
-
-```
-$ cd example
-$ cat transfer_learning.sh
-## training
-python ../autort.py train -i data/28CPTAC_COprospective_W_VU_20150810_05CO037_f01_normal_train.tsv -o tf_model/ -e 40 -b 64 -u m -m ../models/base_models_PXD006109/model.json -rlr -n 10
-
-## prediction
-python ../autort.py predict -t data/28CPTAC_COprospective_W_VU_20150810_05CO037_f01_normal_test.tsv -s tf_model/model.json -o tf_prediction/ -p test
-```
-
-The training took less than 20 minutes using one Titan Xp GPU on a Linux server.
-
-A way to support prediction for peptides with length > 48 is to retrain the base models by increasing the number given to parameter "-l". For example, set "-l 60" to support peptides with length <= 60.
-
-```
-python ../autort.py train -e 100 -b 64 -g ../models/base_models/model.json -u m -p 1 -i data/PXD006109_Cerebellum_rt_add_mox_all_rt_range_3_train.tsv -sm min_max -l 60 -rlr -n 20 -o PXD006109_models/
-```
-
-The parameter setting for -e, -b, -sm, -rlr and -n for the above examples worked well for many data.
-
-
 ## Run AutoRT on Google Colab:
+
 Example: [example/Experiment_specific_RT_prediction_using_AutoRT.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Experiment_specific_RT_prediction_using_AutoRT.ipynb)
+Example: [example/Phosphorylation_experiment_specific_RT_prediction_using_AutoRT_Colab.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Phosphorylation_experiment_specific_RT_prediction_using_AutoRT_Colab.ipynb)
 
 
 ## How to cite:
