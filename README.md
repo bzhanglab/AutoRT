@@ -43,7 +43,7 @@ AutoRT is a python3 package. [TensorFlow](https://www.tensorflow.org/) (>=**2.6*
 $ pip install -r requirements.txt
 ```
 
-AutoRT has been tested on both Linux and Windows systems. It supports training and prediction on both CPU and GPU, but GPU is recommended for model training.
+AutoRT has been tested on both Linux and Windows systems. It supports training and prediction on both CPU and GPU, but GPU is recommended for model training. Multiple GPUs are also supported.
 
 AutoRT can also be used through docker:
 
