@@ -794,7 +794,7 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
             model_tasks[i].set_epoch(nb_epoch)
             model_tasks[i].set_ReduceLROnPlateau(add_ReduceLROnPlateau)
             model_tasks[i].set_early_stop_patience(early_stop_patience)
-            model_tasks[i].do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
+            model_tasks[i].set_do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
             for j in range(n_per_task):
                 if len(model_name_list) >= 1:
                     model_tasks[i].add_model(model_name_list.pop(0), model_file_path.pop(0))
@@ -810,7 +810,7 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
         model_t.set_epoch(nb_epoch)
         model_t.set_ReduceLROnPlateau(add_ReduceLROnPlateau)
         model_t.set_early_stop_patience(early_stop_patience)
-        model_t.do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
+        model_t.set_do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
         for (name, dp_model_file) in model_list['dp_model'].items():
             model_t.add_model(name, dp_model_file)
         with Pool(1) as p:

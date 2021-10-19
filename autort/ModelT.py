@@ -44,7 +44,7 @@ class ModelT:
         self.x_test = None
         self.y_test = None
 
-    def do_evaluation_after_each_epoch(self, x: bool):
+    def set_do_evaluation_after_each_epoch(self, x: bool):
         self.do_evaluation_after_each_epoch = x
 
     def set_ReduceLROnPlateau(self, x: bool):
