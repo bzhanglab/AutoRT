@@ -792,7 +792,7 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
             model_tasks[i].add_train_data(X_train, Y_train, X_test, Y_test)
             model_tasks[i].set_batch_size(batch_size)
             model_tasks[i].set_epoch(nb_epoch)
-            model_tasks[i].add_ReduceLROnPlateau(add_ReduceLROnPlateau)
+            model_tasks[i].set_ReduceLROnPlateau(add_ReduceLROnPlateau)
             model_tasks[i].set_early_stop_patience(early_stop_patience)
             model_tasks[i].do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
             for j in range(n_per_task):
@@ -808,7 +808,7 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
         model_t.add_train_data(X_train, Y_train, X_test, Y_test)
         model_t.set_batch_size(batch_size)
         model_t.set_epoch(nb_epoch)
-        model_t.add_ReduceLROnPlateau(add_ReduceLROnPlateau)
+        model_t.set_ReduceLROnPlateau(add_ReduceLROnPlateau)
         model_t.set_early_stop_patience(early_stop_patience)
         model_t.do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
         for (name, dp_model_file) in model_list['dp_model'].items():

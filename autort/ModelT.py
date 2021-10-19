@@ -47,7 +47,7 @@ class ModelT:
     def do_evaluation_after_each_epoch(self, x: bool):
         self.do_evaluation_after_each_epoch = x
 
-    def add_ReduceLROnPlateau(self, x: bool):
+    def set_ReduceLROnPlateau(self, x: bool):
         self.add_ReduceLROnPlateau = x
 
     def set_early_stop_patience(self,x: int):
