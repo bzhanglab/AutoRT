@@ -763,17 +763,6 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
         peptide_max_length, model_list['max_x_length']))
         sys.exit()
 
-    ModelT.scale_para = scale_para
-    ModelT.x_train = X_train
-    ModelT.y_train = Y_train
-    ModelT.x_test = X_test
-    ModelT.y_test = Y_test
-    ModelT.batch_size = batch_size
-    ModelT.n_epoch = nb_epoch
-    ModelT.add_ReduceLROnPlateau = add_ReduceLROnPlateau
-    ModelT.early_stop_patience = early_stop_patience
-    ModelT.do_evaluation_after_each_epoch = do_evaluation_after_each_epoch
-
     if gpu_device is not None:
         gpu_device = str(gpu_device)
         gpus_ids = gpu_device.split(",")
@@ -799,6 +788,13 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
         for i in range(len(gpus_ids)):
             model_tasks.append(ModelT(models_file, out_dir))
             model_tasks[i].add_gpu_device(gpus_ids[i])
+            model_tasks[i].set_scale_para(scale_para)
+            model_tasks[i].add_train_data(X_train, Y_train, X_test, Y_test)
+            model_tasks[i].set_batch_size(batch_size)
+            model_tasks[i].set_epoch(nb_epoch)
+            model_tasks[i].add_ReduceLROnPlateau(add_ReduceLROnPlateau)
+            model_tasks[i].set_early_stop_patience(early_stop_patience)
+            model_tasks[i].do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
             for j in range(n_per_task):
                 if len(model_name_list) >= 1:
                     model_tasks[i].add_model(model_name_list.pop(0), model_file_path.pop(0))
@@ -808,6 +804,13 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
     else:
         print("Use one GPU or no GPU!")
         model_t = ModelT(models_file, out_dir)
+        model_t.set_scale_para(scale_para)
+        model_t.add_train_data(X_train, Y_train, X_test, Y_test)
+        model_t.set_batch_size(batch_size)
+        model_t.set_epoch(nb_epoch)
+        model_t.add_ReduceLROnPlateau(add_ReduceLROnPlateau)
+        model_t.set_early_stop_patience(early_stop_patience)
+        model_t.do_evaluation_after_each_epoch(do_evaluation_after_each_epoch)
         for (name, dp_model_file) in model_list['dp_model'].items():
             model_t.add_model(name, dp_model_file)
         with Pool(1) as p:

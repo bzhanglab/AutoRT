@@ -21,27 +21,52 @@ def get_peptide_length_from_model(model):
 
 class ModelT:
 
-    ## Global parameters used by all instances
-    add_ReduceLROnPlateau = False
-    early_stop_patience = 0
-    batch_size = 64
-    n_epoch = 40
-    scale_para = dict()
-    x_train = None
-    y_train = None
-    x_test = None
-    y_test = None
-    # do evaluation after each epoch
-    do_evaluation_after_each_epoch = False
-
     def __init__(self, models_file:str, out_dir="./"):
-        ## This is a json file which contains model files.
+        # This is a json file which contains model files.
         self.models_file = models_file
         self.out_dir = out_dir
 
         self.model_dict = dict()
         self.gpu_id = None
         self.trained_model = dict()
+
+        # parameters
+        # parameters used by all instances
+        # do evaluation after each epoch
+        self.do_evaluation_after_each_epoch = False
+        self.add_ReduceLROnPlateau = False
+        self.early_stop_patience = 0
+        self.batch_size = 64
+        self.n_epoch = 40
+        self.scale_para = dict()
+        self.x_train = None
+        self.y_train = None
+        self.x_test = None
+        self.y_test = None
+
+    def do_evaluation_after_each_epoch(self, x: bool):
+        self.do_evaluation_after_each_epoch = x
+
+    def add_ReduceLROnPlateau(self, x: bool):
+        self.add_ReduceLROnPlateau = x
+
+    def set_early_stop_patience(self,x: int):
+        self.early_stop_patience = x
+
+    def set_batch_size(self,x: int):
+        self.batch_size = x
+
+    def set_epoch(self,x: int):
+        self.n_epoch = x
+
+    def set_scale_para(self,x: dict):
+        self.scale_para = x
+
+    def add_train_data(self, x_train, y_train, x_test, y_test):
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_test = x_test
+        self.y_test = y_test
 
     def add_model(self,model_name:str,model_file:str):
         self.model_dict[model_name] = model_file
@@ -79,7 +104,7 @@ class ModelT:
                 print("\nModel training: %s" % (name))
 
             model_name = os.path.basename(dp_model_file)
-            model_full_path =  model_folder + "/" + model_name
+            model_full_path = model_folder + "/" + model_name
             model = tf.keras.models.load_model(model_full_path)
             new_model = model
 
@@ -103,7 +128,7 @@ class ModelT:
 
             print("Perform transfer learning ...")
             n_layers = len(new_model.layers)
-            #new_model.get_layer("embedding").trainable = False
+            # new_model.get_layer("embedding").trainable = False
             print("The number of layers: %d" % (n_layers))
 
             '''
@@ -123,8 +148,8 @@ class ModelT:
             print("Used optimizer:")
             print(model.optimizer)
             all_callbacks = list()
-            if ModelT.do_evaluation_after_each_epoch == True:
-                my_callbacks = RegCallback(ModelT.x_train, ModelT.x_test, ModelT.y_train, ModelT.y_test, ModelT.scale_para)
+            if self.do_evaluation_after_each_epoch is True:
+                my_callbacks = RegCallback(self.x_train, self.x_test, self.y_train, self.y_test, self.scale_para)
                 all_callbacks.append(my_callbacks)
             # Save model
             model_chk_path = tmp_dir + "/best_model.hdf5"
@@ -134,24 +159,24 @@ class ModelT:
             mcp = tf.keras.callbacks.ModelCheckpoint(model_chk_path, save_best_only=True, save_weights_only=False, verbose=1, mode='min')
             all_callbacks.append(mcp)
 
-            if ModelT.add_ReduceLROnPlateau is True:
+            if self.add_ReduceLROnPlateau is True:
                 print("Use ReduceLROnPlateau!")
-                #all_callbacks.append(tf.keras.callbacks.LearningRateScheduler(self.scheduler))
+                # all_callbacks.append(tf.keras.callbacks.LearningRateScheduler(self.scheduler))
                 all_callbacks.append(tf.keras.callbacks.ReduceLROnPlateau(patience=3, factor=0.8, verbose=1, min_lr=0.00001, min_delta=0,
                                      monitor="val_loss",mode="min"))
 
-            if ModelT.early_stop_patience > 0:
-                print("Use EarlyStopping: %d" % (ModelT.early_stop_patience))
-                all_callbacks.append(tf.keras.callbacks.EarlyStopping(patience=ModelT.early_stop_patience, verbose=1))
+            if self.early_stop_patience > 0:
+                print("Use EarlyStopping: %d" % (self.early_stop_patience))
+                all_callbacks.append(tf.keras.callbacks.EarlyStopping(patience=self.early_stop_patience, verbose=1))
 
             # all_callbacks.append(LearningRateScheduler(PolynomialDecay(maxEpochs=nb_epoch, initAlpha=0.001, power=5)))
 
-            ## monitor training information
+            # monitor training information
             # tbCallBack = callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
-            print("Batch size: %d" % (ModelT.batch_size))
-            print("Epoch: %d" % (ModelT.n_epoch))
-            new_model.fit(ModelT.x_train, ModelT.y_train, batch_size=ModelT.batch_size, epochs=ModelT.n_epoch,
-                          validation_data=(ModelT.x_test, ModelT.y_test),
+            print("Batch size: %d" % (self.batch_size))
+            print("Epoch: %d" % (self.n_epoch))
+            new_model.fit(self.x_train, self.y_train, batch_size=self.batch_size, epochs=self.n_epoch,
+                          validation_data=(self.x_test, self.y_test),
                           callbacks=all_callbacks,verbose=0)  # , keras.callbacks.ReduceLROnPlateau(patience=3, factor=0.5, verbose=1, min_lr=0.000001)])
 
             best_model = tf.keras.models.load_model(model_chk_path)
