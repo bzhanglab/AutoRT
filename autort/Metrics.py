@@ -9,6 +9,8 @@ from scipy.stats import pearsonr
 from itertools import combinations
 import multiprocessing
 from .Utils import combine_rts
+import sys
+import psutil
 import functools
 
 
@@ -74,6 +76,7 @@ class ModelE:
         d_t95 = calc_delta_t95(y2['y'], y2['y_pred'])
         return [i,cor,r2,mean_absolute_error,median_absolute_error,d_t95]
 
+
 def model_selection(x, y, para=None, metric="median_absolute_error"):
     ## x is a numpy array. shape: sample vs model
     n_models = x.shape[1]
@@ -82,7 +85,13 @@ def model_selection(x, y, para=None, metric="median_absolute_error"):
     for i in range(n_models):
         models_list.extend(list(combinations(range(n_models),i+1)))
 
-    p = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    if sys.platform.lower().startswith("win"):
+        print("Run on Windows system:")
+        p = multiprocessing.Pool(psutil.cpu_count(logical=False))
+    else:
+        print("Run on %s system:" % sys.platform)
+        p = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+
     model_e = ModelE(x=x, y=y, para=para, reverse=True, metric=metric)
     # evaluate_model_combn_x = functools.partial(evaluate_model_combn, x=x,y=y,para=para,reverse=True,metric=metric)
     data = p.map(model_e.evaluate_model_combn, models_list)
