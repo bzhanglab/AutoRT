@@ -168,7 +168,7 @@ python ../autort.py train -i data/28CPTAC_COprospective_W_VU_20150810_05CO037_f0
 python ../autort.py predict -t data/28CPTAC_COprospective_W_VU_20150810_05CO037_f01_normal_test.tsv -s tf_model/model.json -o tf_prediction/ -p test
 ```
 
-The training took less than 20 minutes using one Titan Xp GPU on a Linux server.
+The training took less than 15 minutes using one Titan Xp GPU on a Linux server.
 
 
 The parameter setting for -e, -b, -sm, -rlr and -n for the above examples worked well for many data.
