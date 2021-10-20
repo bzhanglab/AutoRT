@@ -138,7 +138,6 @@ must be formatted as
 A2FDFADFS3P4ST1AAK
 ```
 
-Then the setting for parameter `-p` looks like this `-p 1,2,3,4`.
 
 An example testing data is available in the data folder as shown below. The first column "x" is required. The second column "y" is optional.
 ```
