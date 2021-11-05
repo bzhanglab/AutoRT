@@ -72,6 +72,8 @@ optional arguments:
                         Batch size for training, default is 64.
   -r2 MAX_RT, --max_rt MAX_RT
                         The maximum retention time. If the value is 0 (default), the maximum retention time will be automatically infered from the input training data.
+  -l MAX_LENGTH, --max_length MAX_LENGTH
+                        The length of the longest peptide to consider for modeling. If the value is 0 (default), it will be automatically infered from the input model file.                        
   -u UNIT, --unit UNIT  The unit of retention time in training data, s: second, m: minute (default).
   -sm SCALE_METHOD, --scale_method SCALE_METHOD
                         Scaling method for RT tranformation: min_max (default), mean_std and single_factor. This is used in training. Default is 'min_max'. The default method works well in most of cases. This should not be
@@ -180,7 +182,7 @@ cd example
 ## training
 python ../autort.py train -e 100 -b 64 -m ../models/base_model/model.json -u m -i data/PXD006109_Cerebellum_rt_add_mox_all_rt_range_3_train.tsv -sm min_max -rlr -n 20 -o PXD006109_models/
 ```
-After the training is finished, the trained model files are saved in the folder `PXD006109_models/`.
+After the training is finished, the trained model files are saved in the folder `PXD006109_models/`. If users want to train a model to support peptides longer than 60 (e.g., 100 amino acids), set the parameter **-l** to a number longer than 60, for example, **-l 100**.
 
 Then we can use the trained models for prediction as shown below:
 ```
