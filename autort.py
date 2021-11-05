@@ -37,7 +37,7 @@ def main():
             parser.add_argument('-e', '--epochs', default=40, type=int,help="The number of epochs, default is 40.")
             parser.add_argument('-b', '--batch_size', default=64, type=int,help="Batch size for training, default is 64.")
             parser.add_argument('-r2', '--max_rt', default=0, type=int,help="The maximum retention time. If the value is 0 (default), the maximum retention time will be automatically infered from the input training data.")
-            #parser.add_argument('-l', '--max_length', default=0, type=int,help="The length of the longest peptide to consider for modeling. If the value is 0 (default), it will be automatically infered from the input training data.")
+            parser.add_argument('-l', '--max_length', default=0, type=int,help="The length of the longest peptide to consider for modeling. If the value is 0 (default), it will be automatically infered from the input model file.")
             #parser.add_argument('-p', '--mod', default=None, type=str,help="The integer number(s) used to represent modified amino acid(s) in training data. For example, if use 1 to represent M with oxidation and use 2 to represent S with phosphorylation, then the setting is '-p 1,2'")
             parser.add_argument('-u', '--unit', default="m", type=str,help="The unit of retention time in training data, s: second, m: minute (default).")
             parser.add_argument('-sm', '--scale_method', default="min_max", type=str,help="Scaling method for RT tranformation: min_max (default), mean_std and single_factor. This is used in training. Default is 'min_max'. The default method works well in most of cases. This should not be changed unless users know well about the meaning of these methods.")
@@ -69,6 +69,7 @@ def main():
             #mod = args.mod
             unit = args.unit
             gpu_ids = args.gpu
+            max_x_length = args.max_length
 
             #use_radam = args.radam
 
@@ -112,13 +113,15 @@ def main():
                                          add_reverse=add_reverse, add_ReduceLROnPlateau=add_ReduceLROnPlateau,
                                          gpu_device=gpu_ids,
                                          do_evaluation_after_each_epoch=do_evaluation_after_each_epoch,
-                                         outlier_ratio=outlier_ratio)
+                                         outlier_ratio=outlier_ratio,
+                                         max_x_length=max_x_length)
             else:
                 ensemble_models(input_data=input_file, nb_epoch=epochs, batch_size=batch_size,
                                 scale_para=scale_para,  unit=unit, models_file=model_file,
                                 out_dir=out_dir, early_stop_patience=early_stop_patience,
                                 add_reverse=add_reverse, add_ReduceLROnPlateau=add_ReduceLROnPlateau,
-                                gpu_device=gpu_ids, do_evaluation_after_each_epoch=do_evaluation_after_each_epoch)
+                                gpu_device=gpu_ids, do_evaluation_after_each_epoch=do_evaluation_after_each_epoch,
+                                max_x_length=max_x_length)
 
             end_time = time.time()
             print("Total time used: %f minutes" % ((end_time - start_time)/60.0))
@@ -151,7 +154,6 @@ def main():
                 os.makedirs(out_dir)
 
             rt_predict(model_file=ensemble,test_file=test_file, out_dir=out_dir, prefix=prefix, use_radam=use_radam)
-
 
 
 if __name__=="__main__":

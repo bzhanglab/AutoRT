@@ -31,6 +31,7 @@ import numpy as np
 from shutil import copyfile
 import sys
 from .ModelT import ModelT, run_model_t
+from .ModelUpdate import ModelUpdate
 from multiprocessing import Process
 
 #from .AdamW import AdamW
@@ -665,14 +666,15 @@ def two_step_ensemble_models(models_file:str, input_data:str,
                     add_ReduceLROnPlateau=False,
                     gpu_device=None,
                     do_evaluation_after_each_epoch=False,
-                    outlier_ratio=0.03):
+                    outlier_ratio=0.03,
+                    max_x_length=0):
     # step 1: training
     print("Step 1:\n")
     tmp_model_dir = out_dir + "/step1"
     if not os.path.exists(tmp_model_dir):
         os.makedirs(tmp_model_dir)
 
-    ensemble_models(models_file=models_file, input_data=input_data, ensemble_method=ensemble_method,
+    trained_model_file = ensemble_models(models_file=models_file, input_data=input_data, ensemble_method=ensemble_method,
                     batch_size=batch_size, nb_epoch=nb_epoch,
                     scale_para=scale_para, unit=unit,
                     out_dir=tmp_model_dir, prefix=prefix,
@@ -682,7 +684,8 @@ def two_step_ensemble_models(models_file:str, input_data:str,
                     gpu_device=gpu_device,
                     do_evaluation_after_each_epoch=do_evaluation_after_each_epoch,
                     select_best_models=False,
-                    use_model_id="0")
+                    use_model_id="0",
+                    max_x_length=max_x_length)
     tmp_prediction_dir = out_dir + "/step1/prediction/"
     if not os.path.exists(tmp_prediction_dir):
         os.makedirs(tmp_prediction_dir)
@@ -711,13 +714,14 @@ def two_step_ensemble_models(models_file:str, input_data:str,
                     add_reverse=add_reverse,
                     add_ReduceLROnPlateau=add_ReduceLROnPlateau,
                     gpu_device=gpu_device,
-                    do_evaluation_after_each_epoch=do_evaluation_after_each_epoch)
+                    do_evaluation_after_each_epoch=do_evaluation_after_each_epoch,
+                    max_x_length=max_x_length)
 
 
 def ensemble_models(models_file:str, input_data:str, #test_file=None,
                     ensemble_method="average",
                     batch_size=64, nb_epoch=100, #mod=None,
-                    #max_x_length=50, # not useful
+                    max_x_length=0,
                     scale_para=None, unit="s",
                     out_dir="./",
                     prefix="test",
@@ -735,10 +739,20 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
     with open(models_file, "r") as read_file:
         model_list = json.load(read_file)
 
+    if model_list['max_x_length'] < max_x_length:
+        new_model_dir = out_dir + "/new_base_model_dir"
+        model_update = ModelUpdate(out_dir=new_model_dir,max_x_length=max_x_length)
+        with Pool(1) as p:
+            p_res = p.map(model_update.update_model_input_shape, [models_file])
+        models_file = p_res[0]
+        with open(models_file, "r") as read_file:
+            model_list = json.load(read_file)
+    else:
+        max_x_length = model_list['max_x_length']
+
     if use_model_id is not None:
         model_list = use_selected_model(models_file,use_model_id=use_model_id)
 
-    max_x_length = model_list['max_x_length']
     peptide_encode_method = get_peptide_encode_method_from_model(models_file)
     aa_file = get_aa_file(models_file)
 
@@ -879,6 +893,8 @@ def ensemble_models(models_file:str, input_data:str, #test_file=None,
     model_json = out_dir + "/model.json"
     with open(model_json, 'w') as f:
         json.dump(model_list, f, indent=2)
+
+    return model_json
     ####################################################################################################################
 
 
