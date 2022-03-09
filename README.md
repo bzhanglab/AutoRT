@@ -1,5 +1,5 @@
 # [AutoRT](https://doi.org/10.1038/s41467-020-15456-w)
-Peptide retention time prediction using deep learning
+**AutoRT** is a peptide retention time prediction tool using deep learning. It supports peptide retention prediction for **tryptic peptides** (global proteome experiments), **MHC bound peptides** (immunopeptidomics experiment) and **PTM peptides** (such as phosphoproteomics experiment, ubiquitome or acetylome experiment).
 
 ### Table of contents:
 
