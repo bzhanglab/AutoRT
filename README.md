@@ -8,6 +8,7 @@
 - [Usage](#usage)
 - [Run AutoRT on Google Colab](#run-autort-on-google-colab)
 - [How to cite](#how-to-cite)
+- [Applications](#applications)
 
 ## Performance of AutoRT
 1. The performance of models trained using more than 100,000 peptides: 
@@ -218,3 +219,6 @@ Example: [example/Phosphorylation_experiment_specific_RT_prediction_using_AutoRT
 Wen, B., Li, K., Zhang, Y. et al. Cancer neoantigen prioritization through sensitive and reliable proteogenomics analysis. Nature Communications 11, 1759 (2020). https://doi.org/10.1038/s41467-020-15456-w
 
 
+## Applications:
+
+A list of applications of AutoRT could be found at: [AutoRT applications](https://github.com/bzhanglab/deep_learning_in_proteomics#peptide-retention-time-prediction).
