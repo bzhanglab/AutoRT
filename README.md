@@ -215,6 +215,9 @@ Example: [example/Experiment_specific_RT_prediction_using_MaxQuant_Ecoli.ipynb](
 
 Example: [example/Phosphorylation_experiment_specific_RT_prediction_using_AutoRT_Colab.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/Phosphorylation_experiment_specific_RT_prediction_using_AutoRT_Colab.ipynb)
 
+Example: [example/RT_prediction_using_AutoRT.ipynb](https://github.com/bzhanglab/AutoRT/blob/master/example/RT_prediction_using_AutoRT.ipynb)
+
+
 
 ## How to cite:
 
