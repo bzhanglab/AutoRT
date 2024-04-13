@@ -183,7 +183,7 @@ def format_mq_evidence(mq_evidence_file, out_file="evidence_format.tsv",
                 continue
 
         ps = None
-        if target_mod in ptm_res:
+        if target_mod is not None and target_mod in ptm_res:
             ps, ps_prob = get_confident_mod_pos(ptm_name=target_mod, mod_pep=row[target_mod + ' Probabilities'],
                                                 ptm_res=ptm_res, site_prob_cutoff=0.75)
             if row_mod_probs != "-":
