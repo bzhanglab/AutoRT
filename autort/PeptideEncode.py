@@ -114,6 +114,9 @@ def encodePeptideOneHot(peptide: str, max_length=None, add_reverse=False):  # ch
         elif AA in letterDict.keys():
             en_vector[i][letterDict[AA]] = 1
             i = i + 1
+        elif AA == "U":
+            en_vector[i][letterDict['C']] = 1
+            i = i + 1
         else:
             print("Error: invalid amino acid: %s" % (str(AA)))
             exit(1)
