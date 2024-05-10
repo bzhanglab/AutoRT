@@ -22,4 +22,3 @@ fi
 
 # Turn off colors
 echo -e "\e[m"
-
