@@ -75,11 +75,12 @@ RUN ln -s $(which python3) /usr/local/bin/python
 
 
 RUN ${PIP} install tensorflow==2.6.0 \
-  matplotlib \
+  matplotlib==3.6 \
   pandas \
   scikit-learn \
-  numpy \
-  gpustat
+  numpy==1.19.2 \
+  gpustat \
+  protobuf==3.20.0
 
 
 RUN git clone https://github.com/bzhanglab/AutoRT \
